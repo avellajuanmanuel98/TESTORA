@@ -161,3 +161,7 @@ SELENIUM_REMOTE_URL = env("SELENIUM_REMOTE_URL", default="http://localhost:4444/
 # blank in the docker-compose setup, where the selenium container already
 # knows where its own browser lives.
 SELENIUM_CHROME_BINARY = env("SELENIUM_CHROME_BINARY", default="")
+# Disable only for local debugging (SELENIUM_HEADLESS=False) — to watch the
+# browser navigate live and see what a target page actually does, e.g. when
+# it behaves differently for an automated session than for a normal one.
+SELENIUM_HEADLESS = env.bool("SELENIUM_HEADLESS", default=True)
