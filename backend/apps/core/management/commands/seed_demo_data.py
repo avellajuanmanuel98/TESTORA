@@ -5,6 +5,7 @@ from apps.environments.models import Environment, EnvironmentVariable
 from apps.organizations.models import Organization, OrganizationMembership
 from apps.projects.models import Project, ProjectMembership
 from apps.test_cases.models import TestCase, TestStep
+from apps.test_suites.models import TestSuite, TestSuiteItem
 from apps.users.models import User
 
 DEMO_USERS = [
@@ -117,6 +118,17 @@ TEST_CASES = [
     ),
 ]
 
+# Groups existing demo test cases into suites by tag — mirrors how a real
+# team organizes regression/smoke coverage without inventing new test data.
+SUITES = [
+    ("Smoke Testing", "smoke"),
+    ("Regression", "regression"),
+    ("Authentication", "authentication"),
+    ("Contravenciones", "contravenciones"),
+    ("Impugnaciones", "impugnaciones"),
+    ("Reports", "reports"),
+]
+
 
 class Command(BaseCommand):
     help = "Seeds Testora Internal / Fenix QA demo data: users, environments, test cases and steps."
@@ -196,6 +208,21 @@ class Command(BaseCommand):
                     test_case=test_case, order=order, action_type=action_type, params=params,
                 )
         self.stdout.write(self.style.SUCCESS(f"Test cases ready: {len(TEST_CASES)}"))
+
+        suites_created = 0
+        for suite_name, tag in SUITES:
+            matching = list(TestCase.objects.filter(project=project, tags__contains=[tag]))
+            if not matching:
+                continue
+            suite, _ = TestSuite.objects.get_or_create(
+                project=project, name=suite_name,
+                defaults={"description": f"Test cases con la etiqueta “{tag}”."},
+            )
+            suite.items.all().delete()
+            for order, test_case in enumerate(matching, start=1):
+                TestSuiteItem.objects.create(suite=suite, test_case=test_case, order=order)
+            suites_created += 1
+        self.stdout.write(self.style.SUCCESS(f"Test suites ready: {suites_created}"))
 
         self.stdout.write(self.style.SUCCESS(
             "\nDemo data seeded. Log in with admin@testora.dev / Testora123!"

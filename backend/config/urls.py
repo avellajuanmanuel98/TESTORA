@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 from apps.environments.views import EnvironmentVariableViewSet, EnvironmentViewSet
 from apps.projects.views import ProjectViewSet
 from apps.test_cases.views import ActionsView, TestCaseViewSet, TestStepViewSet
+from apps.test_suites.views import TestSuiteItemViewSet, TestSuiteViewSet
 
 router = DefaultRouter()
 router.register("projects", ProjectViewSet, basename="project")
@@ -12,6 +13,8 @@ router.register("environments", EnvironmentViewSet, basename="environment")
 router.register("environment-variables", EnvironmentVariableViewSet, basename="environment-variable")
 router.register("test-cases", TestCaseViewSet, basename="test-case")
 router.register("test-steps", TestStepViewSet, basename="test-step")
+router.register("test-suites", TestSuiteViewSet, basename="test-suite")
+router.register("test-suite-items", TestSuiteItemViewSet, basename="test-suite-item")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

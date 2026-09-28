@@ -96,7 +96,11 @@ class TestCaseViewSet(OrganizationScopedModelViewSet):
                 TestStep.objects.filter(pk=step_id).update(order=TEMP_ORDER_OFFSET + offset)
             for offset, step_id in enumerate(step_ids):
                 TestStep.objects.filter(pk=step_id).update(order=offset + 1)
-        return Response(TestStepSerializer(test_case.steps.all(), many=True).data)
+        # test_case.steps.all() would return the queryset prefetch_related
+        # cached at get_object() time — stale now that we've just updated
+        # order. Query fresh instead.
+        fresh_steps = TestStep.objects.filter(test_case=test_case).order_by("order")
+        return Response(TestStepSerializer(fresh_steps, many=True).data)
 
 
 class TestStepViewSet(OrganizationScopedModelViewSet):

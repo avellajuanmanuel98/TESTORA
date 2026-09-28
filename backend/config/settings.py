@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.environments",
     "apps.test_cases",
+    "apps.test_suites",
 ]
 
 MIDDLEWARE = [
