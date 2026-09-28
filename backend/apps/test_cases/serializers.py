@@ -37,7 +37,20 @@ class TestStepSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "updated_at"]
-        extra_kwargs = {"test_case": {"write_only": True}}
+        extra_kwargs = {
+            "test_case": {"write_only": True},
+            # Optional on write: TestStepViewSet.perform_create auto-assigns
+            # the next order when the client omits it (normal "add step"
+            # flow); reordering/duplication set it explicitly via .update()
+            # or .create(), bypassing the serializer entirely.
+            "order": {"required": False},
+        }
+        # DRF auto-derives a UniqueTogetherValidator from the (test_case,
+        # order) UniqueConstraint, which enforces both fields be present in
+        # the request regardless of the field-level required=False above.
+        # The DB constraint already guards integrity; order assignment is
+        # this app's job (perform_create / reorder), not the client's.
+        validators = []
 
     def get_summary(self, obj):
         return render_summary(obj.action_type, obj.params)

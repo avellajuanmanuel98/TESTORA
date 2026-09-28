@@ -214,9 +214,9 @@ class Command(BaseCommand):
             matching = list(TestCase.objects.filter(project=project, tags__contains=[tag]))
             if not matching:
                 continue
-            suite, _ = TestSuite.objects.get_or_create(
+            suite, _ = TestSuite.objects.update_or_create(
                 project=project, name=suite_name,
-                defaults={"description": f"Test cases con la etiqueta “{tag}”."},
+                defaults={"description": f"Casos de prueba con la etiqueta “{tag}”."},
             )
             suite.items.all().delete()
             for order, test_case in enumerate(matching, start=1):

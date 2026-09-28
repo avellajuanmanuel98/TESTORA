@@ -1,6 +1,7 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Max
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from apps.core.viewsets import OrganizationScopedModelViewSet
@@ -66,8 +67,16 @@ class TestSuiteItemViewSet(OrganizationScopedModelViewSet):
     def perform_create(self, serializer):
         suite = serializer.validated_data["suite"]
         self._require_write_role(suite.project)
-        if serializer.validated_data.get("order") is None:
-            next_order = (suite.items.aggregate(max_order=Max("order"))["max_order"] or 0) + 1
-            serializer.save(order=next_order)
-        else:
-            serializer.save()
+        test_case = serializer.validated_data["test_case"]
+        if suite.items.filter(test_case=test_case).exists():
+            raise ValidationError({"test_case": "Este caso de prueba ya está en la suite."})
+        try:
+            with transaction.atomic():
+                if serializer.validated_data.get("order") is None:
+                    next_order = (suite.items.aggregate(max_order=Max("order"))["max_order"] or 0) + 1
+                    serializer.save(order=next_order)
+                else:
+                    serializer.save()
+        except IntegrityError:
+            # Two requests racing to append to the same suite at once.
+            raise ValidationError({"detail": "No se pudo agregar el caso de prueba, probá de nuevo."})

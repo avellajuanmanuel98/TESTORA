@@ -204,7 +204,7 @@ export function StepRow({
               onChange={(e) => setDraft((d) => ({ ...d, screenshot_on_fail: e.target.checked }))}
               className="size-3.5 accent-accent"
             />
-            Capturar screenshot si este step falla
+            Capturar screenshot si este paso falla
           </label>
 
           {canEdit && (

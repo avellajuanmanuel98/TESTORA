@@ -14,7 +14,17 @@ class TestSuiteItemSerializer(serializers.ModelSerializer):
         model = TestSuiteItem
         fields = ["id", "suite", "test_case", "test_case_name", "test_case_status", "order"]
         read_only_fields = ["id"]
-        extra_kwargs = {"suite": {"write_only": True}}
+        extra_kwargs = {
+            "suite": {"write_only": True},
+            # Optional on write: TestSuiteItemViewSet.perform_create
+            # auto-assigns the next order when the client omits it.
+            "order": {"required": False},
+        }
+        # See TestStepSerializer for why: DRF derives UniqueTogetherValidators
+        # from the model's UniqueConstraints (suite+order, suite+test_case),
+        # which would force `order` to be required again. The DB constraints
+        # already guard integrity.
+        validators = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
