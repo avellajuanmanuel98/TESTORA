@@ -85,6 +85,8 @@ docker compose up --build
 - Backend: http://localhost:8000
 - Frontend: http://localhost:5173
 
+**Si esos puertos ya están en uso** en tu máquina (por otro proyecto, por ejemplo), copiá `.env.example` (el de la raíz del repo, no el de `backend/`) a `.env` y ajustá `BACKEND_PORT`/`FRONTEND_PORT`/`DB_PORT`/`REDIS_PORT`. Docker Compose lo lee automáticamente, sin flags extra.
+
 Con los contenedores levantados, en otra terminal:
 
 ```bash
