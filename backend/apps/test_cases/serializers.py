@@ -64,6 +64,12 @@ class TestStepSerializer(serializers.ModelSerializer):
         return action.category if action else "unknown"
 
     def validate(self, attrs):
+        if self.instance is None:
+            # A new step is always created with params={} (the Builder adds
+            # it, then expands it in place so the user fills params in) —
+            # required-params validation only makes sense once the step is
+            # actually saved with real values, i.e. on update, not here.
+            return attrs
         action_type = attrs.get("action_type", getattr(self.instance, "action_type", None))
         params = attrs.get("params", getattr(self.instance, "params", {}))
         try:
