@@ -20,6 +20,7 @@ import {
 import { CATEGORY_LABELS } from "@/features/test-cases/action-icons";
 import { StepRow } from "@/features/test-cases/StepRow";
 import { TestCaseHeader } from "@/features/test-cases/TestCaseHeader";
+import { RunModal } from "@/features/test-runs/RunModal";
 import { ApiError } from "@/lib/api-client";
 
 const ROLE_RANK: Record<string, number> = { viewer: 0, qa_engineer: 1, qa_manager: 2, admin: 3 };
@@ -36,6 +37,7 @@ export function TestCaseBuilderPage() {
   const [dragId, setDragId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [addingAction, setAddingAction] = useState("");
+  const [runModalOpen, setRunModalOpen] = useState(false);
 
   const createStep = useCreateStep(testCaseId!);
   const updateStep = useUpdateStep(testCaseId!);
@@ -109,7 +111,12 @@ export function TestCaseBuilderPage() {
       </div>
 
       <div className="rounded-lg border border-border-default bg-surface-raised">
-        <TestCaseHeader testCase={testCase} canEdit={canEdit} projectId={projectId!} />
+        <TestCaseHeader
+          testCase={testCase}
+          canEdit={canEdit}
+          projectId={projectId!}
+          onRunClick={() => setRunModalOpen(true)}
+        />
 
         <div>
           {testCase.steps.length === 0 && (
@@ -212,6 +219,14 @@ export function TestCaseBuilderPage() {
           ← Volver a Casos de prueba
         </Button>
       </div>
+
+      <RunModal
+        open={runModalOpen}
+        onClose={() => setRunModalOpen(false)}
+        projectId={projectId!}
+        testCaseId={testCase.id}
+        onRunCreated={(runId) => navigate(`/projects/${projectId}/test-runs/${runId}`)}
+      />
     </div>
   );
 }

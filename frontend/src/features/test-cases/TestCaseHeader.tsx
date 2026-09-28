@@ -1,7 +1,8 @@
 import { type KeyboardEvent, useState } from "react";
-import { X } from "lucide-react";
+import { PlayCircle, X } from "lucide-react";
 
 import { Badge, StatusPill } from "@/components/ui/StatusPill";
+import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/toast-store";
 import { useUpdateTestCase } from "@/features/test-cases/api";
@@ -74,10 +75,12 @@ export function TestCaseHeader({
   testCase,
   canEdit,
   projectId,
+  onRunClick,
 }: {
   testCase: TestCaseDetail;
   canEdit: boolean;
   projectId: string;
+  onRunClick: () => void;
 }) {
   const update = useUpdateTestCase(testCase.id.toString(), projectId);
   const [newTag, setNewTag] = useState("");
@@ -100,6 +103,10 @@ export function TestCaseHeader({
         <StatusPill tone={TEST_CASE_STATUS_TONE[testCase.status]} live={testCase.status === "active"}>
           {TEST_CASE_STATUS_LABEL[testCase.status]}
         </StatusPill>
+        <Button variant="secondary" size="sm" className="ml-auto" onClick={onRunClick} disabled={testCase.steps.length === 0}>
+          <PlayCircle className="size-3.5" />
+          Ejecutar
+        </Button>
       </div>
 
       <div className="mt-1">

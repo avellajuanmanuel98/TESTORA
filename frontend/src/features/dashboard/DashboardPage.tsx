@@ -49,9 +49,9 @@ export function DashboardPage() {
       <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-info-subtle-border bg-info-subtle px-4 py-3 text-[13px] text-fg-primary">
         <Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
         <p>
-          Las métricas de ejecución (tasa de aprobación, pruebas inestables, tendencias) se habilitan cuando el motor de ejecución
-          entre en funcionamiento en la próxima fase. Por ahora este panel refleja el estado del inventario de
-          pruebas.
+          Las métricas agregadas de ejecución (tasa de aprobación, pruebas inestables, tendencias) se suman a este panel
+          en una próxima iteración. Mientras tanto, el progreso y los resultados de cada ejecución están disponibles en{" "}
+          <span className="font-medium text-fg-primary">Ejecuciones</span> dentro de cada proyecto.
         </p>
       </div>
 

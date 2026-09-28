@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ArrowDown, ArrowUp, FlaskConical, Trash2 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { ArrowDown, ArrowUp, FlaskConical, PlayCircle, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/toast-store";
 import { useCurrentUser } from "@/features/auth/auth-store";
 import { useProjectContext } from "@/features/projects/ProjectContext";
 import { useTestCases } from "@/features/test-cases/api";
+import { RunModal } from "@/features/test-runs/RunModal";
 import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
 import {
   useAddSuiteItem,
@@ -30,6 +31,8 @@ export function TestSuiteDetailPage() {
   const { data: suite, isLoading } = useTestSuite(suiteId);
   const { data: testCases } = useTestCases(projectId!);
   const [addingId, setAddingId] = useState("");
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   const addItem = useAddSuiteItem(suiteId!, projectId!);
   const removeItem = useRemoveSuiteItem(suiteId!, projectId!);
@@ -83,9 +86,20 @@ export function TestSuiteDetailPage() {
       </div>
 
       <div className="rounded-lg border border-border-default bg-surface-raised">
-        <div className="border-b border-border-default px-6 py-4">
-          <h1 className="text-[16px] font-semibold text-fg-primary">{suite.name}</h1>
-          {suite.description && <p className="mt-1 text-[13px] text-fg-muted">{suite.description}</p>}
+        <div className="flex items-start justify-between gap-4 border-b border-border-default px-6 py-4">
+          <div>
+            <h1 className="text-[16px] font-semibold text-fg-primary">{suite.name}</h1>
+            {suite.description && <p className="mt-1 text-[13px] text-fg-muted">{suite.description}</p>}
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setRunModalOpen(true)}
+            disabled={suite.items.length === 0}
+          >
+            <PlayCircle className="size-3.5" />
+            Ejecutar suite
+          </Button>
         </div>
 
         {suite.items.length === 0 ? (
@@ -172,6 +186,14 @@ export function TestSuiteDetailPage() {
           </div>
         )}
       </div>
+
+      <RunModal
+        open={runModalOpen}
+        onClose={() => setRunModalOpen(false)}
+        projectId={projectId!}
+        suiteId={suite.id}
+        onRunCreated={(runId) => navigate(`/projects/${projectId}/test-runs/${runId}`)}
+      />
     </div>
   );
 }

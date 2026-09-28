@@ -11,6 +11,8 @@ import { ProjectWorkspaceLayout } from "@/features/projects/ProjectWorkspaceLayo
 import { ProjectsListPage } from "@/features/projects/ProjectsListPage";
 import { TestCaseBuilderPage } from "@/features/test-cases/TestCaseBuilderPage";
 import { TestCasesListPage } from "@/features/test-cases/TestCasesListPage";
+import { TestRunDetailPage } from "@/features/test-runs/TestRunDetailPage";
+import { TestRunsListPage } from "@/features/test-runs/TestRunsListPage";
 import { TestSuiteDetailPage } from "@/features/test-suites/TestSuiteDetailPage";
 import { TestSuitesListPage } from "@/features/test-suites/TestSuitesListPage";
 
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="test-cases/:testCaseId" element={<TestCaseBuilderPage />} />
           <Route path="test-suites" element={<TestSuitesListPage />} />
           <Route path="test-suites/:suiteId" element={<TestSuiteDetailPage />} />
+          <Route path="test-runs" element={<TestRunsListPage />} />
+          <Route path="test-runs/:runId" element={<TestRunDetailPage />} />
           <Route path="environments" element={<EnvironmentsPage />} />
           <Route path="settings" element={<ProjectSettingsPage />} />
         </Route>

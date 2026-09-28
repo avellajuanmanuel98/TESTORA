@@ -105,7 +105,10 @@ def _run_test_case(result: TestResult, context: ExecutionContext) -> bool:
             except Exception as exc:
                 failed = True
                 step_result.status = TestResult.STATUS_ERROR
-                step_result.error_message = str(exc)
+                step_result.error_message = _clean_error_message(exc)
+                if result.error_message == "":
+                    result.error_type = type(exc).__name__
+                    result.error_message = step_result.error_message
                 if step.screenshot_on_fail:
                     _capture_evidence(driver, result, step_result)
             finally:
@@ -115,8 +118,19 @@ def _run_test_case(result: TestResult, context: ExecutionContext) -> bool:
     result.status = TestResult.STATUS_FAILED if failed else TestResult.STATUS_PASSED
     result.finished_at = timezone.now()
     result.duration_ms = int((result.finished_at - result.started_at).total_seconds() * 1000)
-    result.save(update_fields=["status", "finished_at", "duration_ms"])
+    result.save(update_fields=["status", "finished_at", "duration_ms", "error_type", "error_message"])
     return failed
+
+
+def _clean_error_message(exc: Exception) -> str:
+    """Selenium exceptions stringify with a huge hex stacktrace and a
+    "(Session info: ...)" line — noise for a QA engineer reading a result.
+    Keep just the actual message. Our own AssertionErrors (plain, one-line
+    Spanish messages) pass through unchanged."""
+    text = str(exc).split("\nStacktrace:")[0].split("\n  (Session info:")[0].strip()
+    if text.startswith("Message: "):
+        text = text[len("Message: "):]
+    return text
 
 
 def _capture_evidence(driver, result, step_result, only_screenshot=False):
