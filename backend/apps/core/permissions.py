@@ -29,13 +29,15 @@ class HasProjectRole(BasePermission):
     """Object-level permission for anything nested under a Project.
 
     Read access requires any ProjectMembership; mutating access requires a
-    role at or above `min_role_for_write` (default: qa_engineer). The view
-    must implement get_object_project(obj) -> Project, provided by
+    role at or above `min_role_for_write` (default: qa_engineer), except
+    DELETE, which is gated by the (usually stricter) `min_role_for_delete`.
+    The view must implement get_object_project(obj) -> Project, provided by
     OrganizationScopedModelViewSet via its `project_lookup` attribute.
     """
 
     message = "You do not have access to this project."
     min_role_for_write = "qa_engineer"
+    min_role_for_delete = "qa_engineer"
 
     def has_object_permission(self, request, view, obj):
         from apps.projects.models import ProjectMembership
@@ -48,4 +50,5 @@ class HasProjectRole(BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return True
-        return ROLE_RANK[membership.role] >= ROLE_RANK[self.min_role_for_write]
+        required_role = self.min_role_for_delete if request.method == "DELETE" else self.min_role_for_write
+        return ROLE_RANK[membership.role] >= ROLE_RANK[required_role]

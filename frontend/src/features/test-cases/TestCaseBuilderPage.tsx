@@ -47,6 +47,7 @@ export function TestCaseBuilderPage() {
 
   const membership = project.members.find((m) => m.user.id === user?.id);
   const canEdit = Boolean(membership && ROLE_RANK[membership.role] >= ROLE_RANK.qa_engineer);
+  const canDelete = Boolean(membership && ROLE_RANK[membership.role] >= ROLE_RANK.admin);
 
   if (isLoading || !testCase || !actions) {
     return (
@@ -114,6 +115,7 @@ export function TestCaseBuilderPage() {
         <TestCaseHeader
           testCase={testCase}
           canEdit={canEdit}
+          canDelete={canDelete}
           projectId={projectId!}
           onRunClick={() => setRunModalOpen(true)}
         />

@@ -69,6 +69,14 @@ function invalidateTestCase(queryClient: ReturnType<typeof useQueryClient>, test
   queryClient.invalidateQueries({ queryKey: ["test-cases", "detail", testCaseId] });
 }
 
+export function useDeleteTestCase(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (testCaseId: number) => api.delete(`/test-cases/${testCaseId}/`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["test-cases", projectId] }),
+  });
+}
+
 interface CreateStepPayload {
   test_case: number;
   action_type: string;

@@ -56,6 +56,9 @@ class TestCaseViewSet(OrganizationScopedModelViewSet):
     organization_lookup = "project__organization"
     project_lookup = "project"
     created_by_field = "created_by"
+    # Deleting a test case is permanent (cascades its steps and run
+    # history) — reserved for admins, unlike editing it day-to-day.
+    min_delete_role = "admin"
     filterset_fields = ["project", "status"]
     queryset = TestCase.objects.select_related("project").prefetch_related("steps")
 

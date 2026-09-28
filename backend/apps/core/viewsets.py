@@ -44,11 +44,17 @@ class OrganizationScopedModelViewSet(ModelViewSet):
     #: project settings or membership management.
     min_write_role: str = "qa_engineer"
 
+    #: minimum role required specifically for DELETE. None means "same as
+    #: min_write_role" — set this (e.g. to "admin") on a viewset where
+    #: deleting is riskier than editing (Test Cases, Test Suites).
+    min_delete_role: str | None = None
+
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.project_lookup is not None:
             permission = HasProjectRole()
             permission.min_role_for_write = self.min_write_role
+            permission.min_role_for_delete = self.min_delete_role or self.min_write_role
             permissions.append(permission)
         return permissions
 

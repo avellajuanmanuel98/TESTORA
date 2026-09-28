@@ -38,6 +38,27 @@ function invalidateSuite(queryClient: ReturnType<typeof useQueryClient>, suiteId
   queryClient.invalidateQueries({ queryKey: ["test-suites", projectId] });
 }
 
+interface UpdateSuitePayload {
+  name?: string;
+  description?: string;
+}
+
+export function useUpdateTestSuite(suiteId: string, projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateSuitePayload) => api.patch<TestSuiteDetail>(`/test-suites/${suiteId}/`, payload),
+    onSuccess: () => invalidateSuite(queryClient, suiteId, projectId),
+  });
+}
+
+export function useDeleteTestSuite(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (suiteId: number) => api.delete(`/test-suites/${suiteId}/`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["test-suites", projectId] }),
+  });
+}
+
 export function useAddSuiteItem(suiteId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

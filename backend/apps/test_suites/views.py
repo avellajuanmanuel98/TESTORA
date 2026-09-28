@@ -21,6 +21,9 @@ TEMP_ORDER_OFFSET = 1_000_000
 class TestSuiteViewSet(OrganizationScopedModelViewSet):
     organization_lookup = "project__organization"
     project_lookup = "project"
+    # Deleting a suite is permanent — reserved for admins, unlike editing
+    # its name or membership day-to-day.
+    min_delete_role = "admin"
     filterset_fields = ["project"]
     queryset = TestSuite.objects.select_related("project").prefetch_related("items__test_case")
 

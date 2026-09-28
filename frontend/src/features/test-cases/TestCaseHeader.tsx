@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { PlayCircle, X } from "lucide-react";
+import { PlayCircle, Trash2, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Badge, StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { InlineEditable } from "@/components/ui/InlineEditable";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/toast-store";
-import { useUpdateTestCase } from "@/features/test-cases/api";
+import { useDeleteTestCase, useUpdateTestCase } from "@/features/test-cases/api";
 import type { TestCaseDetail, TestCaseStatus } from "@/features/test-cases/types";
 import { ApiError } from "@/lib/api-client";
 import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
@@ -14,15 +15,19 @@ import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
 export function TestCaseHeader({
   testCase,
   canEdit,
+  canDelete,
   projectId,
   onRunClick,
 }: {
   testCase: TestCaseDetail;
   canEdit: boolean;
+  canDelete: boolean;
   projectId: string;
   onRunClick: () => void;
 }) {
   const update = useUpdateTestCase(testCase.id.toString(), projectId);
+  const deleteTestCase = useDeleteTestCase(projectId);
+  const navigate = useNavigate();
   const [newTag, setNewTag] = useState("");
 
   function save(payload: Parameters<typeof update.mutate>[0]) {
@@ -43,10 +48,28 @@ export function TestCaseHeader({
         <StatusPill tone={TEST_CASE_STATUS_TONE[testCase.status]} live={testCase.status === "active"}>
           {TEST_CASE_STATUS_LABEL[testCase.status]}
         </StatusPill>
-        <Button variant="secondary" size="sm" className="ml-auto" onClick={onRunClick} disabled={testCase.steps.length === 0}>
-          <PlayCircle className="size-3.5" />
-          Ejecutar
-        </Button>
+        <div className="ml-auto flex items-center gap-1">
+          <Button variant="secondary" size="sm" onClick={onRunClick} disabled={testCase.steps.length === 0}>
+            <PlayCircle className="size-3.5" />
+            Ejecutar
+          </Button>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                deleteTestCase.mutate(testCase.id, {
+                  onSuccess: () => navigate(`/projects/${projectId}/test-cases`),
+                  onError: (err) =>
+                    toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el caso de prueba."),
+                })
+              }
+              aria-label="Eliminar caso de prueba"
+            >
+              <Trash2 className="size-3.5 text-fg-muted hover:text-danger" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mt-1">

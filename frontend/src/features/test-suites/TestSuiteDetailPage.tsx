@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InlineEditable } from "@/components/ui/InlineEditable";
 import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusDot } from "@/components/ui/StatusPill";
@@ -16,9 +17,11 @@ import { RunModal } from "@/features/test-runs/RunModal";
 import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
 import {
   useAddSuiteItem,
+  useDeleteTestSuite,
   useRemoveSuiteItem,
   useReorderSuiteItems,
   useTestSuite,
+  useUpdateTestSuite,
 } from "@/features/test-suites/api";
 import { ApiError } from "@/lib/api-client";
 
@@ -37,9 +40,12 @@ export function TestSuiteDetailPage() {
   const addItem = useAddSuiteItem(suiteId!, projectId!);
   const removeItem = useRemoveSuiteItem(suiteId!, projectId!);
   const reorderItems = useReorderSuiteItems(suiteId!, projectId!);
+  const updateSuite = useUpdateTestSuite(suiteId!, projectId!);
+  const deleteSuite = useDeleteTestSuite(projectId!);
 
   const membership = project.members.find((m) => m.user.id === user?.id);
   const canEdit = Boolean(membership && ROLE_RANK[membership.role] >= ROLE_RANK.qa_engineer);
+  const canDelete = Boolean(membership && ROLE_RANK[membership.role] >= ROLE_RANK.admin);
 
   if (isLoading || !suite) {
     return (
@@ -88,18 +94,57 @@ export function TestSuiteDetailPage() {
       <div className="rounded-lg border border-border-default bg-surface-raised">
         <div className="flex items-start justify-between gap-4 border-b border-border-default px-6 py-4">
           <div>
-            <h1 className="text-[16px] font-semibold text-fg-primary">{suite.name}</h1>
-            {suite.description && <p className="mt-1 text-[13px] text-fg-muted">{suite.description}</p>}
+            <InlineEditable
+              value={suite.name}
+              onCommit={(name) =>
+                updateSuite.mutate(
+                  { name },
+                  { onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo guardar.") }
+                )
+              }
+              canEdit={canEdit}
+              className="text-[16px] font-semibold text-fg-primary"
+            />
+            <InlineEditable
+              value={suite.description}
+              onCommit={(description) =>
+                updateSuite.mutate(
+                  { description },
+                  { onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo guardar.") }
+                )
+              }
+              canEdit={canEdit}
+              placeholder="Agregar una descripción…"
+              className="mt-1 block text-[13px] text-fg-muted"
+            />
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setRunModalOpen(true)}
-            disabled={suite.items.length === 0}
-          >
-            <PlayCircle className="size-3.5" />
-            Ejecutar suite
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setRunModalOpen(true)}
+              disabled={suite.items.length === 0}
+            >
+              <PlayCircle className="size-3.5" />
+              Ejecutar suite
+            </Button>
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  deleteSuite.mutate(suite.id, {
+                    onSuccess: () => navigate(`/projects/${projectId}/test-suites`),
+                    onError: (err) =>
+                      toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar la suite."),
+                  })
+                }
+                aria-label="Eliminar suite"
+              >
+                <Trash2 className="size-3.5 text-fg-muted hover:text-danger" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {suite.items.length === 0 ? (
