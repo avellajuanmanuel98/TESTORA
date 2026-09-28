@@ -12,3 +12,4 @@ export * from "@/components/ui/Toaster";
 export * from "@/components/ui/toast-store";
 export * from "@/components/ui/Breadcrumb";
 export * from "@/components/ui/DropdownMenu";
+export * from "@/components/ui/InlineEditable";

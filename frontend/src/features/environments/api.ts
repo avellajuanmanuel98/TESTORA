@@ -26,6 +26,20 @@ export function useCreateEnvironment(projectId: string) {
   });
 }
 
+interface UpdateEnvironmentPayload {
+  name?: string;
+  base_url?: string;
+}
+
+export function useUpdateEnvironment(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }: UpdateEnvironmentPayload & { id: number }) =>
+      api.patch<Environment>(`/environments/${id}/`, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["environments", projectId] }),
+  });
+}
+
 interface UpsertVariablePayload {
   environment: number;
   key: string;

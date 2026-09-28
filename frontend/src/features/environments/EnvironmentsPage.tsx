@@ -3,6 +3,7 @@ import { Globe2, KeyRound, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InlineEditable } from "@/components/ui/InlineEditable";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -13,6 +14,7 @@ import {
   useDeleteEnvironment,
   useDeleteVariable,
   useEnvironments,
+  useUpdateEnvironment,
 } from "@/features/environments/api";
 import type { Environment } from "@/features/environments/types";
 import { useProjectContext } from "@/features/projects/ProjectContext";
@@ -146,6 +148,14 @@ function EnvironmentCard({ environment, projectId }: { environment: Environment;
   const [variableModalOpen, setVariableModalOpen] = useState(false);
   const deleteVariable = useDeleteVariable(projectId);
   const deleteEnvironment = useDeleteEnvironment(projectId);
+  const updateEnvironment = useUpdateEnvironment(projectId);
+
+  function save(payload: { name?: string; base_url?: string }) {
+    updateEnvironment.mutate(
+      { id: environment.id, ...payload },
+      { onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el entorno.") }
+    );
+  }
 
   return (
     <div className="rounded-lg border border-border-default bg-surface-raised">
@@ -155,8 +165,19 @@ function EnvironmentCard({ environment, projectId }: { environment: Environment;
             <Globe2 className="size-3.5" aria-hidden />
           </div>
           <div>
-            <div className="text-[13px] font-semibold text-fg-primary">{environment.name}</div>
-            <div className="font-mono text-[12px] text-fg-muted">{environment.base_url}</div>
+            <InlineEditable
+              value={environment.name}
+              onCommit={(name) => save({ name: name.toUpperCase() })}
+              canEdit
+              className="block text-[13px] font-semibold text-fg-primary"
+            />
+            <InlineEditable
+              value={environment.base_url}
+              onCommit={(base_url) => save({ base_url })}
+              canEdit
+              placeholder="https://…"
+              className="block font-mono text-[12px] text-fg-muted"
+            />
           </div>
         </div>
         <div className="flex items-center gap-1">
