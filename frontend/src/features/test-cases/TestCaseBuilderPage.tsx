@@ -67,7 +67,7 @@ export function TestCaseBuilderPage() {
       { test_case: Number(testCaseId), action_type: actionKey, params: {} },
       {
         onSuccess: (step) => setExpandedStepId(step.id),
-        onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo agregar el step."),
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo agregar el paso."),
       }
     );
     setAddingAction("");
@@ -102,7 +102,7 @@ export function TestCaseBuilderPage() {
         <Breadcrumb
           items={[
             { label: project.name, to: `/projects/${projectId}` },
-            { label: "Test Cases", to: `/projects/${projectId}/test-cases` },
+            { label: "Casos de prueba", to: `/projects/${projectId}/test-cases` },
             { label: testCase.name },
           ]}
         />
@@ -114,7 +114,7 @@ export function TestCaseBuilderPage() {
         <div>
           {testCase.steps.length === 0 && (
             <p className="px-6 py-10 text-center text-[13px] text-fg-muted">
-              Este test case todavía no tiene steps. Agregá el primero abajo.
+              Este caso de prueba todavía no tiene pasos. Agregá el primero abajo.
             </p>
           )}
           {testCase.steps.map((step) => (
@@ -134,24 +134,24 @@ export function TestCaseBuilderPage() {
                   { id: step.id, ...draft },
                   {
                     onError: (err) =>
-                      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el step."),
+                      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el paso."),
                   }
                 )
               }
               onToggleEnabled={() =>
                 updateStep.mutate(
                   { id: step.id, enabled: !step.enabled },
-                  { onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar el step.") }
+                  { onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar el paso.") }
                 )
               }
               onDuplicate={() =>
                 duplicateStep.mutate(step.id, {
-                  onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo duplicar el step."),
+                  onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo duplicar el paso."),
                 })
               }
               onDelete={() =>
                 deleteStep.mutate(step.id, {
-                  onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el step."),
+                  onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el paso."),
                 })
               }
               onMoveUp={() => moveByOffset(step.id, -1)}
@@ -190,7 +190,7 @@ export function TestCaseBuilderPage() {
                 onChange={(e) => handleAddStep(e.target.value)}
                 className="h-8 cursor-pointer appearance-none rounded-md border border-dashed border-border-strong bg-transparent pl-8 pr-3 text-[13px] font-medium text-fg-secondary hover:border-accent hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               >
-                <option value="">Add step…</option>
+                <option value="">Agregar paso…</option>
                 {Object.entries(actionsByCategory).map(([category, categoryActions]) => (
                   <optgroup key={category} label={CATEGORY_LABELS[category] ?? category}>
                     {categoryActions.map((action) => (
@@ -209,7 +209,7 @@ export function TestCaseBuilderPage() {
 
       <div className="mt-4">
         <Button variant="ghost" size="sm" onClick={() => navigate(`/projects/${projectId}/test-cases`)}>
-          ← Volver a Test Cases
+          ← Volver a Casos de prueba
         </Button>
       </div>
     </div>

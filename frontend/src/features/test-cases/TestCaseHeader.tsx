@@ -1,18 +1,13 @@
 import { type KeyboardEvent, useState } from "react";
 import { X } from "lucide-react";
 
-import { Badge, StatusPill, type Tone } from "@/components/ui/StatusPill";
+import { Badge, StatusPill } from "@/components/ui/StatusPill";
 import { Select } from "@/components/ui/Select";
 import { toast } from "@/components/ui/toast-store";
 import { useUpdateTestCase } from "@/features/test-cases/api";
 import type { TestCaseDetail, TestCaseStatus } from "@/features/test-cases/types";
 import { ApiError } from "@/lib/api-client";
-
-const STATUS_TONE: Record<TestCaseStatus, Tone> = {
-  active: "success",
-  draft: "neutral",
-  deprecated: "warning",
-};
+import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
 
 function InlineEditable({
   value,
@@ -102,7 +97,7 @@ export function TestCaseHeader({
           canEdit={canEdit}
           className="text-[16px] font-semibold text-fg-primary"
         />
-        <StatusPill tone={STATUS_TONE[testCase.status]}>{testCase.status}</StatusPill>
+        <StatusPill tone={TEST_CASE_STATUS_TONE[testCase.status]}>{TEST_CASE_STATUS_LABEL[testCase.status]}</StatusPill>
       </div>
 
       <div className="mt-1">
@@ -124,7 +119,7 @@ export function TestCaseHeader({
                 type="button"
                 onClick={() => save({ tags: testCase.tags.filter((t) => t !== tag) })}
                 className="ml-1 text-fg-muted hover:text-danger"
-                aria-label={`Quitar tag ${tag}`}
+                aria-label={`Quitar etiqueta ${tag}`}
               >
                 <X className="size-2.5" />
               </button>
@@ -141,7 +136,7 @@ export function TestCaseHeader({
                 setNewTag("");
               }
             }}
-            placeholder="+ tag"
+            placeholder="+ etiqueta"
             className="w-16 bg-transparent text-[12px] text-fg-muted placeholder:text-fg-muted focus:outline-none"
           />
         )}
@@ -152,9 +147,9 @@ export function TestCaseHeader({
               value={testCase.status}
               onChange={(e) => save({ status: e.target.value as TestCaseStatus })}
             >
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="deprecated">Deprecated</option>
+              <option value="draft">Borrador</option>
+              <option value="active">Activo</option>
+              <option value="deprecated">Obsoleto</option>
             </Select>
           </div>
         )}

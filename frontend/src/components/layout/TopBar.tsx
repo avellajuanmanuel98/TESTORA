@@ -7,8 +7,8 @@ import { useAuthStore, useCurrentUser } from "@/features/auth/auth-store";
 import { useTheme } from "@/lib/theme";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/projects", label: "Projects", end: false },
+  { to: "/", label: "Panel", end: true },
+  { to: "/projects", label: "Proyectos", end: false },
 ];
 
 function initials(name: string) {
@@ -27,14 +27,14 @@ export function TopBar() {
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-border-default bg-surface px-4">
-      <div className="flex items-center gap-6">
-        <NavLink to="/" className="flex items-center gap-2">
+      <div className="flex h-full items-center">
+        <NavLink to="/" className="flex items-center gap-2 border-r border-border-default py-3 pr-4">
           <div className="flex size-6 items-center justify-center rounded-md bg-fg-primary text-surface">
             <TerminalSquare className="size-3.5" aria-hidden />
           </div>
-          <span className="text-[13px] font-semibold text-fg-primary">Testora</span>
+          <span className="text-[14px] font-bold tracking-tight text-fg-primary">Testora</span>
         </NavLink>
-        <nav className="flex items-center gap-4">
+        <nav className="flex h-full items-center gap-4 pl-4">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -42,8 +42,8 @@ export function TopBar() {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  "text-[13px] font-medium transition-colors",
-                  isActive ? "text-fg-primary" : "text-fg-muted hover:text-fg-primary"
+                  "text-[13px] font-medium text-fg-muted transition-colors hover:text-fg-primary",
+                  isActive && "text-fg-primary"
                 )
               }
             >

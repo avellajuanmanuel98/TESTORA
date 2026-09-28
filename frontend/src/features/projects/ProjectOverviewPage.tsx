@@ -35,7 +35,7 @@ export function ProjectOverviewPage() {
       )}
 
       <div className="mb-8 grid grid-cols-3 gap-3">
-        <MetricCard icon={FlaskConical} label="Test cases" value={project.test_case_count} />
+        <MetricCard icon={FlaskConical} label="Casos de prueba" value={project.test_case_count} />
         <MetricCard icon={Users} label="Miembros" value={project.members.length} />
         <MetricCard icon={Globe2} label="Última actividad" value={formatRelativeTime(project.last_activity_at)} />
       </div>
@@ -60,7 +60,7 @@ export function ProjectOverviewPage() {
           to={`/projects/${project.id}/test-cases`}
           className="text-[13px] font-medium text-accent hover:text-accent-hover"
         >
-          Ver todos los test cases →
+          Ver todos los casos de prueba →
         </Link>
       </div>
     </div>

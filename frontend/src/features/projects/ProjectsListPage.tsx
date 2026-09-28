@@ -13,6 +13,7 @@ import { useCurrentUser } from "@/features/auth/auth-store";
 import { useCreateProject, useProjects } from "@/features/projects/api";
 import { formatRelativeTime } from "@/lib/format";
 import { ApiError } from "@/lib/api-client";
+import { PROJECT_STATUS_LABEL } from "@/lib/labels";
 
 function NewProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState("");
@@ -85,7 +86,7 @@ export function ProjectsListPage() {
     <div className="mx-auto max-w-5xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-semibold text-fg-primary">Projects</h1>
+          <h1 className="text-[18px] font-semibold text-fg-primary">Proyectos</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
             Espacios de trabajo de automatización de pruebas de Testora Internal.
           </p>
@@ -93,7 +94,7 @@ export function ProjectsListPage() {
         {canCreate && (
           <Button variant="primary" onClick={() => setModalOpen(true)}>
             <Plus className="size-3.5" />
-            New Project
+            Nuevo proyecto
           </Button>
         )}
       </div>
@@ -121,7 +122,7 @@ export function ProjectsListPage() {
             canCreate && (
               <Button variant="primary" onClick={() => setModalOpen(true)}>
                 <Plus className="size-3.5" />
-                New Project
+                Nuevo proyecto
               </Button>
             )
           }
@@ -139,9 +140,9 @@ export function ProjectsListPage() {
               <div className="flex min-w-0 flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[14px] font-medium text-fg-primary">{project.name}</span>
-                  <StatusPill tone={project.status === "active" ? "success" : "neutral"} dot={false}>
-                    {project.status === "active" ? "Active" : "Archived"}
-                  </StatusPill>
+                  {project.status !== "active" && (
+                    <StatusPill tone="neutral">{PROJECT_STATUS_LABEL[project.status]}</StatusPill>
+                  )}
                 </div>
                 {project.description && (
                   <p className="truncate text-[13px] text-fg-muted">{project.description}</p>
@@ -150,7 +151,7 @@ export function ProjectsListPage() {
               <div className="flex shrink-0 items-center gap-6 text-[13px] text-fg-muted">
                 <div className="text-right">
                   <div className="font-medium text-fg-primary">{project.test_case_count}</div>
-                  <div className="text-[12px]">tests</div>
+                  <div className="text-[12px]">pruebas</div>
                 </div>
                 <div className="w-28 text-right text-[12px]">
                   {formatRelativeTime(project.last_activity_at)}

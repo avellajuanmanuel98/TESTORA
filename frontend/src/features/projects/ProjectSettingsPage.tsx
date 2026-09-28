@@ -35,7 +35,7 @@ export function ProjectSettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-6">
-      <h1 className="mb-1 text-[15px] font-semibold text-fg-primary">Settings</h1>
+      <h1 className="mb-1 text-[15px] font-semibold text-fg-primary">Configuración</h1>
       <p className="mb-6 text-[13px] text-fg-muted">
         {canEdit
           ? "Cambios visibles para todo el equipo del proyecto."
@@ -56,8 +56,8 @@ export function ProjectSettingsPage() {
           onChange={(e) => setStatus(e.target.value as "active" | "archived")}
           disabled={!canEdit}
         >
-          <option value="active">Active</option>
-          <option value="archived">Archived</option>
+          <option value="active">Activo</option>
+          <option value="archived">Archivado</option>
         </Select>
 
         {error && <p className="text-[13px] text-danger">{error}</p>}

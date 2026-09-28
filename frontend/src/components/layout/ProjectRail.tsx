@@ -9,13 +9,13 @@ interface ProjectRailProps {
 }
 
 const ITEMS = [
-  { to: "", label: "Overview", end: true },
-  { to: "test-cases", label: "Test Cases" },
-  { to: "environments", label: "Environments" },
-  { to: "settings", label: "Settings" },
+  { to: "", label: "Resumen", end: true },
+  { to: "test-cases", label: "Casos de prueba" },
+  { to: "environments", label: "Entornos" },
+  { to: "settings", label: "Configuración" },
 ];
 
-const UPCOMING = ["Suites", "Runs"];
+const UPCOMING = ["Suites", "Ejecuciones"];
 
 export function ProjectRail({ projectId }: ProjectRailProps) {
   const base = `/projects/${projectId}`;

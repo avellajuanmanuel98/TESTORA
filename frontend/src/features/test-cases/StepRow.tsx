@@ -138,11 +138,7 @@ export function StepRow({
           </span>
         </button>
 
-        {!step.enabled && (
-          <StatusPill tone="neutral" dot={false}>
-            Deshabilitado
-          </StatusPill>
-        )}
+        {!step.enabled && <StatusPill tone="neutral">Deshabilitado</StatusPill>}
         {justSaved && (
           <span className="flex items-center gap-1 text-[12px] font-medium text-success">
             <Check className="size-3.5" /> Guardado
@@ -233,8 +229,8 @@ export function StepRow({
       <Modal
         open={confirmingDelete}
         onClose={() => setConfirmingDelete(false)}
-        title="Eliminar step"
-        description={`“${step.action_label}: ${step.summary}” se eliminará de este test case.`}
+        title="Eliminar paso"
+        description={`“${step.action_label}: ${step.summary}” se eliminará de este caso de prueba.`}
         footer={
           <>
             <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>

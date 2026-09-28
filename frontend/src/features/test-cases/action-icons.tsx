@@ -47,9 +47,9 @@ export const ACTION_ICONS: Record<string, LucideIcon> = {
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  navigation: "Navigation",
-  browser: "Browser",
-  interaction: "Interaction",
-  assertion: "Assertions",
+  navigation: "Navegación",
+  browser: "Navegador",
+  interaction: "Interacción",
+  assertion: "Aserciones",
   control: "Control",
 };

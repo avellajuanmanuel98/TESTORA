@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useProject } from "@/features/projects/api";
 import { ProjectContext } from "@/features/projects/ProjectContext";
+import { PROJECT_STATUS_LABEL } from "@/lib/labels";
 
 export function ProjectWorkspaceLayout() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -30,10 +31,10 @@ export function ProjectWorkspaceLayout() {
     <ProjectContext.Provider value={project}>
       <div className="flex h-[calc(100vh-3rem)] flex-col">
         <div className="flex items-center gap-3 border-b border-border-default px-6 py-3">
-          <Breadcrumb items={[{ label: "Projects", to: "/projects" }, { label: project.name }]} />
-          <StatusPill tone={project.status === "active" ? "success" : "neutral"} dot={false}>
-            {project.status === "active" ? "Active" : "Archived"}
-          </StatusPill>
+          <Breadcrumb items={[{ label: "Proyectos", to: "/projects" }, { label: project.name }]} />
+          {project.status !== "active" && (
+            <StatusPill tone="neutral">{PROJECT_STATUS_LABEL[project.status]}</StatusPill>
+          )}
         </div>
         <div className="flex flex-1 overflow-hidden">
           <ProjectRail projectId={project.id.toString()} />

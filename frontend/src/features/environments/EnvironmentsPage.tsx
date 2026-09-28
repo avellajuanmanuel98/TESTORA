@@ -211,14 +211,14 @@ export function EnvironmentsPage() {
     <div className="mx-auto max-w-4xl px-6 py-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-[15px] font-semibold text-fg-primary">Environments</h1>
+          <h1 className="text-[15px] font-semibold text-fg-primary">Entornos</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
-            DEV, QA, UAT y sus variables. Usalas en los steps como <code className="font-mono">{"{{BASE_URL}}"}</code>.
+            DEV, QA, UAT y sus variables. Usalas en los pasos como <code className="font-mono">{"{{BASE_URL}}"}</code>.
           </p>
         </div>
         <Button variant="secondary" onClick={() => setModalOpen(true)}>
           <Plus className="size-3.5" />
-          New Environment
+          Nuevo entorno
         </Button>
       </div>
 
@@ -237,7 +237,7 @@ export function EnvironmentsPage() {
           action={
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />
-              New Environment
+              Nuevo entorno
             </Button>
           }
         />

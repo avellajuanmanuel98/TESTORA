@@ -6,26 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Badge, StatusPill, type Tone } from "@/components/ui/StatusPill";
+import { Badge, StatusDot } from "@/components/ui/StatusPill";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { useCreateTestCase, useTestCases } from "@/features/test-cases/api";
 import { useProjectContext } from "@/features/projects/ProjectContext";
-import type { TestCaseStatus } from "@/features/test-cases/types";
 import { ApiError } from "@/lib/api-client";
 import { formatRelativeTime } from "@/lib/format";
-
-const STATUS_TONE: Record<TestCaseStatus, Tone> = {
-  active: "success",
-  draft: "neutral",
-  deprecated: "warning",
-};
-
-const STATUS_LABEL: Record<TestCaseStatus, string> = {
-  active: "Active",
-  draft: "Draft",
-  deprecated: "Deprecated",
-};
+import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
 
 function NewTestCaseModal({ open, onClose, projectId }: { open: boolean; onClose: () => void; projectId: string }) {
   const [name, setName] = useState("");
@@ -44,7 +32,7 @@ function NewTestCaseModal({ open, onClose, projectId }: { open: boolean; onClose
           onClose();
           navigate(`/projects/${projectId}/test-cases/${testCase.id}`);
         },
-        onError: (err) => setError(err instanceof ApiError ? err.message : "No se pudo crear el test case."),
+        onError: (err) => setError(err instanceof ApiError ? err.message : "No se pudo crear el caso de prueba."),
       }
     );
   }
@@ -53,7 +41,7 @@ function NewTestCaseModal({ open, onClose, projectId }: { open: boolean; onClose
     <Modal
       open={open}
       onClose={onClose}
-      title="Nuevo test case"
+      title="Nuevo caso de prueba"
       description="Empezá con un nombre claro; los pasos se arman en el editor."
       footer={
         <>
@@ -92,26 +80,26 @@ export function TestCasesListPage() {
     <div className="mx-auto max-w-5xl px-6 py-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h1 className="text-[15px] font-semibold text-fg-primary">Test Cases</h1>
+          <h1 className="text-[15px] font-semibold text-fg-primary">Casos de prueba</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
             {isLoading ? "Cargando…" : `${data?.count ?? 0} casos de prueba en este proyecto.`}
           </p>
         </div>
         <Button variant="primary" onClick={() => setModalOpen(true)}>
           <Plus className="size-3.5" />
-          New Test Case
+          Nuevo caso de prueba
         </Button>
       </div>
 
       {!isLoading && data?.results.length === 0 ? (
         <EmptyState
           icon={FlaskConical}
-          title="Sin test cases todavía"
+          title="Sin casos de prueba todavía"
           description="Creá el primer caso de prueba para empezar a construir tu suite de automatización."
           action={
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />
-              New Test Case
+              Nuevo caso de prueba
             </Button>
           }
         />
@@ -120,8 +108,8 @@ export function TestCasesListPage() {
           <THead>
             <tr>
               <TH>Nombre</TH>
-              <TH>Tags</TH>
-              <TH>Steps</TH>
+              <TH>Etiquetas</TH>
+              <TH>Pasos</TH>
               <TH>Estado</TH>
               <TH>Actualizado</TH>
             </tr>
@@ -140,7 +128,7 @@ export function TestCasesListPage() {
                 </TD>
                 <TD className="text-fg-muted">{tc.step_count}</TD>
                 <TD>
-                  <StatusPill tone={STATUS_TONE[tc.status]}>{STATUS_LABEL[tc.status]}</StatusPill>
+                  <StatusDot tone={TEST_CASE_STATUS_TONE[tc.status]}>{TEST_CASE_STATUS_LABEL[tc.status]}</StatusDot>
                 </TD>
                 <TD className="text-fg-muted">{formatRelativeTime(tc.updated_at)}</TD>
               </TR>
