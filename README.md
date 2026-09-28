@@ -119,9 +119,9 @@ npm run dev
 
 ## Datos de demo
 
-`seed_demo_data` crea la organización **Testora Internal**, el proyecto **Fenix QA** (gestión de contravenciones e impugnaciones de tránsito), tres entornos (DEV/QA/UAT) con variables, y seis test cases realistas con sus steps. Usuarios de ejemplo (contraseña `Testora123!` para todos):
+`seed_demo_data` crea la organización **Testora Internal**, el proyecto **Gencell Pharma** (Bioinformática y Referencias: recepción de muestras, pipeline de secuenciación FASTQ/BAM/VCF, interpretación y entrega de resultados), tres entornos (DEV/QA/UAT) con variables, y ocho casos de prueba realistas con sus steps. Usuarios de ejemplo (contraseña `Testora123!` para todos):
 
-| Email                          | Rol de organización | Rol en Fenix QA |
+| Email                          | Rol de organización | Rol en Gencell Pharma |
 |---------------------------------|----------------------|------------------|
 | admin@testora.dev               | owner                | admin            |
 | sofia.ramirez@testora.dev       | member               | qa_manager       |

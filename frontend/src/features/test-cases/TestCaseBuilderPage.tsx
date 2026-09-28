@@ -114,7 +114,7 @@ export function TestCaseBuilderPage() {
         <div>
           {testCase.steps.length === 0 && (
             <p className="px-6 py-10 text-center text-[13px] text-fg-muted">
-              Este caso de prueba todavía no tiene pasos. Agregá el primero abajo.
+              Este caso de prueba todavía no tiene pasos. Agrega el primero abajo.
             </p>
           )}
           {testCase.steps.map((step) => (

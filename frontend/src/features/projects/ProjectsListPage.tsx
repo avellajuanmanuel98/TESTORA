@@ -62,7 +62,7 @@ function NewProjectModal({ open, onClose }: { open: boolean; onClose: () => void
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Fenix QA"
+          placeholder="Gencell Pharma"
         />
         <Input
           label="Descripción"
@@ -117,7 +117,7 @@ export function ProjectsListPage() {
         <EmptyState
           icon={FolderGit2}
           title="Todavía no hay proyectos"
-          description="Creá el primer proyecto para empezar a organizar casos de prueba, entornos y ejecuciones."
+          description="Crea el primer proyecto para empezar a organizar casos de prueba, entornos y ejecuciones."
           action={
             canCreate && (
               <Button variant="primary" onClick={() => setModalOpen(true)}>

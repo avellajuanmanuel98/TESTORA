@@ -154,3 +154,22 @@
   --shadow-panel: var(--shadow-md);
   --shadow-panel-lg: var(--shadow-lg);
 }
+
+/* Status "live" marker (StatusMark, in components/ui/StatusPill.tsx): a
+   square blip — not the circular dot every dashboard uses — with a soft
+   expanding ring reserved for states that are genuinely live (active,
+   later "running"). Signals "this is happening now", not decoration. */
+@keyframes status-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.status-pulse-ring {
+  animation: status-pulse-ring 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}

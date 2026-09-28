@@ -40,7 +40,7 @@ function NewSuiteModal({ open, onClose, projectId }: { open: boolean; onClose: (
       open={open}
       onClose={onClose}
       title="Nueva suite"
-      description="Agrupá casos de prueba relacionados para ejecutarlos juntos."
+      description="Agrupa casos de prueba relacionados para ejecutarlos juntos."
       footer={
         <>
           <Button type="button" variant="secondary" onClick={onClose}>
@@ -93,7 +93,7 @@ export function TestSuitesListPage() {
         <EmptyState
           icon={Layers}
           title="Sin suites todavía"
-          description="Agrupá casos de prueba relacionados (smoke, regresión, un módulo específico) para ejecutarlos como unidad."
+          description="Agrupa casos de prueba relacionados (smoke, regresión, un módulo específico) para ejecutarlos como unidad."
           action={
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />

@@ -92,7 +92,7 @@ export function TestSuiteDetailPage() {
           <EmptyState
             icon={FlaskConical}
             title="Sin casos de prueba en esta suite"
-            description="Agregá casos de prueba existentes del proyecto para agruparlos acá."
+            description="Agrega casos de prueba existentes del proyecto para agruparlos acá."
             className="border-0"
           />
         ) : (
@@ -105,7 +105,10 @@ export function TestSuiteDetailPage() {
                 <span className="flex-1 truncate text-[13px] font-medium text-fg-primary">
                   {item.test_case_name}
                 </span>
-                <StatusDot tone={TEST_CASE_STATUS_TONE[item.test_case_status]}>
+                <StatusDot
+                  tone={TEST_CASE_STATUS_TONE[item.test_case_status]}
+                  live={item.test_case_status === "active"}
+                >
                   {TEST_CASE_STATUS_LABEL[item.test_case_status]}
                 </StatusDot>
                 {canEdit && (

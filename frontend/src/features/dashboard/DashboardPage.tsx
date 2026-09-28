@@ -64,7 +64,7 @@ export function DashboardPage() {
       ) : recent.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-default px-6 py-12 text-center">
           <FlaskConical className="size-5 text-fg-muted" />
-          <p className="text-[13px] text-fg-muted">Todavía no hay casos de prueba. Creá un proyecto para empezar.</p>
+          <p className="text-[13px] text-fg-muted">Todavía no hay casos de prueba. Crea un proyecto para empezar.</p>
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-border-default rounded-lg border border-border-default bg-surface-raised">
@@ -82,7 +82,9 @@ export function DashboardPage() {
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <StatusDot tone={TEST_CASE_STATUS_TONE[tc.status]}>{TEST_CASE_STATUS_LABEL[tc.status]}</StatusDot>
+                <StatusDot tone={TEST_CASE_STATUS_TONE[tc.status]} live={tc.status === "active"}>
+                  {TEST_CASE_STATUS_LABEL[tc.status]}
+                </StatusDot>
                 <span className="w-20 text-right text-[12px] text-fg-muted">
                   {formatRelativeTime(tc.updated_at)}
                 </span>

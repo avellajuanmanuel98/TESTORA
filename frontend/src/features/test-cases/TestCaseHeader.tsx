@@ -97,7 +97,9 @@ export function TestCaseHeader({
           canEdit={canEdit}
           className="text-[16px] font-semibold text-fg-primary"
         />
-        <StatusPill tone={TEST_CASE_STATUS_TONE[testCase.status]}>{TEST_CASE_STATUS_LABEL[testCase.status]}</StatusPill>
+        <StatusPill tone={TEST_CASE_STATUS_TONE[testCase.status]} live={testCase.status === "active"}>
+          {TEST_CASE_STATUS_LABEL[testCase.status]}
+        </StatusPill>
       </div>
 
       <div className="mt-1">

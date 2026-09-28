@@ -51,7 +51,7 @@ export function LoginPage() {
         >
           <div>
             <h1 className="text-[15px] font-semibold text-fg-primary">Iniciar sesión</h1>
-            <p className="mt-0.5 text-[13px] text-fg-muted">Accedé con tu cuenta de Testora Internal.</p>
+            <p className="mt-0.5 text-[13px] text-fg-muted">Accede con tu cuenta de Testora Internal.</p>
           </div>
 
           <Input

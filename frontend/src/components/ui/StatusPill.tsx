@@ -2,16 +2,7 @@ import { cn } from "@/lib/cn";
 
 export type Tone = "neutral" | "accent" | "success" | "danger" | "warning" | "info";
 
-const solidClasses: Record<Tone, string> = {
-  neutral: "bg-surface-sunken text-fg-secondary",
-  accent: "bg-accent-subtle text-accent",
-  success: "bg-success-subtle text-success",
-  danger: "bg-danger-subtle text-danger",
-  warning: "bg-warning-subtle text-warning",
-  info: "bg-info-subtle text-info",
-};
-
-const dotClasses: Record<Tone, string> = {
+const markClasses: Record<Tone, string> = {
   neutral: "bg-fg-muted",
   accent: "bg-accent",
   success: "bg-success",
@@ -29,34 +20,62 @@ const textClasses: Record<Tone, string> = {
   info: "text-info",
 };
 
+interface StatusMarkProps {
+  tone: Tone;
+  /** Reserve for states that are genuinely happening right now (active,
+   * running) — not a generic "looks nice" flourish. */
+  live?: boolean;
+}
+
+/** The square blip shared by StatusDot and StatusPill. Square, not a
+ * circle — every other status dot in every dashboard is a circle; this is
+ * Testora's own mark, echoing the squared-off logo. */
+function StatusMark({ tone, live }: StatusMarkProps) {
+  return (
+    <span className="relative inline-flex size-[7px] shrink-0">
+      {live && (
+        <span
+          className={cn("status-pulse-ring absolute inset-0 rounded-[2px]", markClasses[tone])}
+          aria-hidden
+        />
+      )}
+      <span className={cn("relative size-full rounded-[2px]", markClasses[tone])} aria-hidden />
+    </span>
+  );
+}
+
 interface StatusPillProps {
   tone?: Tone;
   children: React.ReactNode;
+  /** Marks a genuinely live state (active, running) with a soft pulse. */
+  live?: boolean;
   className?: string;
 }
 
-/** A compact tag for prominent, standalone status (page headers, breadcrumbs).
- * Solid, quiet fill — never a bright full-pill badge. */
-export function StatusPill({ tone = "neutral", children, className }: StatusPillProps) {
+/** Prominent, standalone status (page headers, breadcrumbs). No capsule, no
+ * fill — a square mark plus bold small-caps text. Reads as a signal, not
+ * as the same colored-badge component every SaaS dashboard reuses. */
+export function StatusPill({ tone = "neutral", children, live, className }: StatusPillProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[4px] px-1.5 py-[3px] text-[11px] font-semibold uppercase tracking-wide leading-none",
-        solidClasses[tone],
+        "inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider leading-none",
+        textClasses[tone],
         className
       )}
     >
+      <StatusMark tone={tone} live={live} />
       {children}
     </span>
   );
 }
 
-/** Status inside a dense row (tables, lists): a dot plus text, no capsule —
- * reads as data, not as decoration. This is the default for tabular status. */
-export function StatusDot({ tone = "neutral", children, className }: StatusPillProps) {
+/** Status inside a dense row (tables, lists): the same square mark plus
+ * text, sized for tabular density. */
+export function StatusDot({ tone = "neutral", children, live, className }: StatusPillProps) {
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-[13px]", textClasses[tone], className)}>
-      <span className={cn("size-1.5 shrink-0 rounded-full", dotClasses[tone])} aria-hidden />
+      <StatusMark tone={tone} live={live} />
       {children}
     </span>
   );

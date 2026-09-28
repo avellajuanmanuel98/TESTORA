@@ -42,7 +42,7 @@ function NewTestCaseModal({ open, onClose, projectId }: { open: boolean; onClose
       open={open}
       onClose={onClose}
       title="Nuevo caso de prueba"
-      description="Empezá con un nombre claro; los pasos se arman en el editor."
+      description="Empieza con un nombre claro; los pasos se arman en el editor."
       footer={
         <>
           <Button type="button" variant="secondary" onClick={onClose}>
@@ -95,7 +95,7 @@ export function TestCasesListPage() {
         <EmptyState
           icon={FlaskConical}
           title="Sin casos de prueba todavía"
-          description="Creá el primer caso de prueba para empezar a construir tu suite de automatización."
+          description="Crea el primer caso de prueba para empezar a construir tu suite de automatización."
           action={
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />
@@ -128,7 +128,9 @@ export function TestCasesListPage() {
                 </TD>
                 <TD className="text-fg-muted">{tc.step_count}</TD>
                 <TD>
-                  <StatusDot tone={TEST_CASE_STATUS_TONE[tc.status]}>{TEST_CASE_STATUS_LABEL[tc.status]}</StatusDot>
+                  <StatusDot tone={TEST_CASE_STATUS_TONE[tc.status]} live={tc.status === "active"}>
+                    {TEST_CASE_STATUS_LABEL[tc.status]}
+                  </StatusDot>
                 </TD>
                 <TD className="text-fg-muted">{formatRelativeTime(tc.updated_at)}</TD>
               </TR>

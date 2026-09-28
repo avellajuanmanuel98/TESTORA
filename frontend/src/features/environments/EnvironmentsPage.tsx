@@ -213,7 +213,7 @@ export function EnvironmentsPage() {
         <div>
           <h1 className="text-[15px] font-semibold text-fg-primary">Entornos</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
-            DEV, QA, UAT y sus variables. Usalas en los pasos como <code className="font-mono">{"{{BASE_URL}}"}</code>.
+            DEV, QA, UAT y sus variables. Se usan en los pasos como <code className="font-mono">{"{{BASE_URL}}"}</code>.
           </p>
         </div>
         <Button variant="secondary" onClick={() => setModalOpen(true)}>
@@ -233,7 +233,7 @@ export function EnvironmentsPage() {
         <EmptyState
           icon={Globe2}
           title="Sin entornos configurados"
-          description="Creá al menos un entorno (DEV, QA, UAT) para poder ejecutar pruebas más adelante."
+          description="Crea al menos un entorno (DEV, QA, UAT) para poder ejecutar pruebas más adelante."
           action={
             <Button variant="primary" onClick={() => setModalOpen(true)}>
               <Plus className="size-3.5" />
