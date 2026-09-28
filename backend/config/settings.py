@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "apps.environments",
     "apps.test_cases",
     "apps.test_suites",
+    "apps.test_runs",
+    "apps.automation",
 ]
 
 MIDDLEWARE = [
@@ -145,5 +147,17 @@ CELERY_RESULT_BACKEND = env("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+# One browser per worker process (see architecture risk notes on Selenium
+# concurrency) and never ack a task before it actually finishes, so a killed
+# worker gets its run requeued instead of silently losing it.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_SOFT_TIME_LIMIT = env.int("CELERY_TASK_SOFT_TIME_LIMIT", default=300)
+CELERY_TASK_TIME_LIMIT = env.int("CELERY_TASK_TIME_LIMIT", default=360)
 
 SELENIUM_REMOTE_URL = env("SELENIUM_REMOTE_URL", default="http://localhost:4444/wd/hub")
+# Only needed when the browser isn't at chromedriver's default lookup path
+# (e.g. pointing at a specific Chrome/Chromium binary in local dev). Left
+# blank in the docker-compose setup, where the selenium container already
+# knows where its own browser lives.
+SELENIUM_CHROME_BINARY = env("SELENIUM_CHROME_BINARY", default="")

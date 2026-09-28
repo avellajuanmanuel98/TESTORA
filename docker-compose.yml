@@ -37,6 +37,32 @@ services:
       redis:
         condition: service_started
 
+  celery-worker:
+    build: ./backend
+    command: celery -A config worker -l info --concurrency=1
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgres://testora:testora@db:5432/testora
+      REDIS_URL: redis://redis:6379/0
+      SELENIUM_REMOTE_URL: http://selenium:4444/wd/hub
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      selenium:
+        condition: service_started
+
+  # Selenium talks Remote WebDriver from day one (see architecture notes) —
+  # swapping this for a real Grid hub later is only a URL change.
+  selenium:
+    image: selenium/standalone-chrome:latest
+    shm_size: 2gb
+    ports:
+      - "${SELENIUM_PORT:-4444}:4444"
+
   frontend:
     build: ./frontend
     environment:

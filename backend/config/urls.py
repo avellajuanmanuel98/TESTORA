@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -5,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 from apps.environments.views import EnvironmentVariableViewSet, EnvironmentViewSet
 from apps.projects.views import ProjectViewSet
 from apps.test_cases.views import ActionsView, TestCaseViewSet, TestStepViewSet
+from apps.test_runs.views import TestRunViewSet
 from apps.test_suites.views import TestSuiteItemViewSet, TestSuiteViewSet
 
 router = DefaultRouter()
@@ -15,6 +18,7 @@ router.register("test-cases", TestCaseViewSet, basename="test-case")
 router.register("test-steps", TestStepViewSet, basename="test-step")
 router.register("test-suites", TestSuiteViewSet, basename="test-suite")
 router.register("test-suite-items", TestSuiteItemViewSet, basename="test-suite-item")
+router.register("test-runs", TestRunViewSet, basename="test-run")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -22,3 +26,6 @@ urlpatterns = [
     path("api/actions/", ActionsView.as_view(), name="actions"),
     path("api/", include("apps.users.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

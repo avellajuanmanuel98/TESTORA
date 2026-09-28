@@ -1,8 +1,8 @@
 # Testora
 
-Plataforma interna de automatización de pruebas web basada en Selenium. Testora permite a un equipo de QA administrar proyectos, diseñar casos de prueba como automatizaciones (no como documentos), configurar entornos y variables, y —a partir de la Fase 2— ejecutar esas pruebas de forma asíncrona sobre Selenium.
+Plataforma interna de automatización de pruebas web basada en Selenium. Testora permite a un equipo de QA administrar proyectos, diseñar casos de prueba como automatizaciones (no como documentos), configurar entornos y variables, y ejecutarlas de forma asíncrona sobre Selenium real.
 
-Este repositorio contiene la **Fase 1**: arquitectura base, autenticación, Projects, Test Cases, el Test Case Builder, Environments y el Design System sobre el que se construye el resto del producto. El motor de ejecución (Celery + Selenium) llega en la Fase 2.
+Este repositorio contiene la **Fase 1** (arquitectura base, autenticación, Projects, Test Cases, el Test Case Builder, Environments y el Design System) y el primer corte de **Fase 2**: el motor de ejecución backend (modelos de Test Runs, Celery, worker con Selenium real). La UI de progreso en vivo de los runs llega en el próximo corte.
 
 ## Stack
 
@@ -10,8 +10,8 @@ Este repositorio contiene la **Fase 1**: arquitectura base, autenticación, Proj
 |-----------------|--------------------------------------------------|
 | Frontend        | React + TypeScript + Vite + Tailwind CSS v4      |
 | Backend / API   | Django + Django REST Framework                   |
-| Automatización  | Selenium (Fase 2), registro de acciones propio    |
-| Procesamiento   | Celery + Redis (infraestructura lista, Fase 2)    |
+| Automatización  | Selenium (Remote WebDriver), registro de acciones propio |
+| Procesamiento   | Celery + Redis                                   |
 | Base de datos   | PostgreSQL                                       |
 | Infraestructura | Docker + Docker Compose                          |
 
@@ -20,14 +20,15 @@ Este repositorio contiene la **Fase 1**: arquitectura base, autenticación, Proj
 ```
 Frontend (Vite/React) → API (DRF) → PostgreSQL
                               ↓
-                        Redis (broker, Fase 2)
+                            Redis (broker)
                               ↓
-                    Celery Worker (Fase 2)
+                        Celery Worker
                               ↓
-                  Selenium Remote WebDriver (Fase 2)
+                  Selenium Remote WebDriver
+                  (selenium/standalone-chrome)
 ```
 
-Selenium nunca se ejecuta dentro de un request HTTP: toda ejecución de pruebas es, desde el diseño, un job asíncrono (Celery). Esta base ya está montada en `docker-compose.yml`/`requirements.txt`, aunque el worker y las tareas se implementan en la Fase 2.
+Selenium nunca se ejecuta dentro de un request HTTP: `POST /api/test-runs/` solo crea el `TestRun` (+ sus `TestResult`) y encola `execute_test_run` en Celery — el worker es quien abre el navegador, ejecuta los pasos y persiste los resultados incrementalmente. El worker habla con Selenium vía Remote WebDriver desde el día uno (contra el contenedor `selenium/standalone-chrome` en `docker-compose.yml`), así que pasar a un Grid real más adelante es cambiar una URL, no la arquitectura.
 
 ### Aislamiento por organización
 
@@ -144,13 +145,15 @@ Recursos principales (todos filtrados por organización + membresía de proyecto
 - `GET/POST/PATCH/DELETE /api/test-steps/`, `POST /api/test-steps/{id}/duplicate/`
 - `GET/POST /api/environments/?project={id}`, `GET/POST/DELETE /api/environment-variables/`
 - `GET /api/actions/` — registro de acciones disponibles para el Test Case Builder (JSON-schema por acción)
+- `GET/POST /api/test-runs/?project={id}` — encola un run (body: `project`, `environment`, y `suite` **o** `test_case`); nunca ejecuta Selenium en el request
+- `GET /api/test-runs/{id}/` — detalle completo del run, con `test_results → step_results → evidence` anidados (pensado para polling)
 
 ## Extender el registro de acciones
 
-Cada acción del Test Case Builder (Click, Assert Text, Wait Until...) se declara en `backend/apps/test_cases/actions.py` como un `ActionDefinition` con su lista de parámetros tipados. El frontend construye el formulario de cada step dinámicamente a partir de `GET /api/actions/`. Agregar una acción nueva es agregar una entrada a `ACTIONS`; no requiere tocar el componente del builder ni el motor de ejecución.
+Cada acción del Test Case Builder (Click, Assert Text, Wait Until...) se declara en `backend/apps/test_cases/actions.py` como un `ActionDefinition` con su lista de parámetros tipados. El frontend construye el formulario de cada step dinámicamente a partir de `GET /api/actions/`. La ejecución real de cada acción vive por separado en `backend/apps/automation/executors.py` (`EXECUTORS`, una función por `action.key`) — agregar una acción nueva es una entrada en `ACTIONS` más su executor, sin tocar el componente del builder ni el resto del motor.
 
 ## Roadmap
 
-- **Fase 2** — Test Suites, motor de ejecución (Celery + Selenium Worker), Test Runs con progreso en vivo, Test Results.
-- **Fase 3** — Evidencias (screenshots, HTML, logs), Reports, variables integradas end-to-end en el builder.
-- **Fase 4** — Test recorder, ejecución paralela, Selenium Grid, CI/CD, integraciones (Jira/Azure DevOps/GitHub).
+- **Fase 2 (en curso)** — ✅ Test Suites. ✅ Motor de ejecución backend (Celery + Selenium Worker, modelos de Test Runs/Results/Evidence). Pendiente: Test Runs con UI de progreso en vivo (polling) y botón "Ejecutar" desde el Builder/Suites.
+- **Fase 3** — Reports, variables integradas end-to-end en el builder, evidencia más rica.
+- **Fase 4** — Test recorder, ejecución paralela, Selenium Grid, auto-reparación heurística de selectores, CI/CD, integraciones (Jira/Azure DevOps/GitHub).
