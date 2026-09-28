@@ -35,6 +35,8 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Adds the authenticated user (and their organization) to the login
     response so the frontend doesn't need a second round trip on sign-in."""
 
+    default_error_messages = {"no_active_account": "Correo o contraseña incorrectos."}
+
     def validate(self, attrs):
         data = super().validate(attrs)
         data["user"] = MeSerializer(self.user).data

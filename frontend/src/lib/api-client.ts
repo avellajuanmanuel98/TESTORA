@@ -13,6 +13,13 @@ export class ApiError extends Error {
   }
 }
 
+// Auth endpoints never go through the auto-refresh-on-401 dance below: a
+// failed login attempt isn't an expired session, and trying to "refresh"
+// right after one is nonsensical — it was masking the real login error
+// (wrong password, inactive account, etc.) behind a generic "Session
+// expired." on every rejected login attempt.
+const AUTH_ENDPOINTS = ["/auth/login/", "/auth/refresh/"];
+
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -57,7 +64,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}, is
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
 
-  if (response.status === 401 && !isRetry) {
+  if (response.status === 401 && !isRetry && !AUTH_ENDPOINTS.includes(path)) {
     const newAccess = await refreshAccessToken();
     if (newAccess) {
       return apiFetch<T>(path, options, true);
