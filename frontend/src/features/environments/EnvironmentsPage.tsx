@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/toast-store";
-import { useCreateEnvironment, useCreateVariable, useDeleteVariable, useEnvironments } from "@/features/environments/api";
+import {
+  useCreateEnvironment,
+  useCreateVariable,
+  useDeleteEnvironment,
+  useDeleteVariable,
+  useEnvironments,
+} from "@/features/environments/api";
 import type { Environment } from "@/features/environments/types";
 import { useProjectContext } from "@/features/projects/ProjectContext";
 import { ApiError } from "@/lib/api-client";
@@ -139,6 +145,7 @@ function NewVariableModal({
 function EnvironmentCard({ environment, projectId }: { environment: Environment; projectId: string }) {
   const [variableModalOpen, setVariableModalOpen] = useState(false);
   const deleteVariable = useDeleteVariable(projectId);
+  const deleteEnvironment = useDeleteEnvironment(projectId);
 
   return (
     <div className="rounded-lg border border-border-default bg-surface-raised">
@@ -152,10 +159,25 @@ function EnvironmentCard({ environment, projectId }: { environment: Environment;
             <div className="font-mono text-[12px] text-fg-muted">{environment.base_url}</div>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setVariableModalOpen(true)}>
-          <Plus className="size-3.5" />
-          Variable
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setVariableModalOpen(true)}>
+            <Plus className="size-3.5" />
+            Variable
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              deleteEnvironment.mutate(environment.id, {
+                onError: (err) =>
+                  toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el entorno."),
+              })
+            }
+            aria-label={`Eliminar entorno ${environment.name}`}
+          >
+            <Trash2 className="size-3.5 text-fg-muted hover:text-danger" />
+          </Button>
+        </div>
       </div>
 
       {environment.variables.length === 0 ? (

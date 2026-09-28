@@ -48,3 +48,11 @@ export function useDeleteVariable(projectId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["environments", projectId] }),
   });
 }
+
+export function useDeleteEnvironment(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (environmentId: number) => api.delete(`/environments/${environmentId}/`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["environments", projectId] }),
+  });
+}
