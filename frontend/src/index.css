@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import "./styles/tokens.css";
+
+@layer base {
+  * {
+    border-color: var(--border-default);
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-surface text-fg-primary font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--accent-subtle);
+    color: var(--fg-primary);
+  }
+
+  /* Keyboard focus only — mouse clicks never show a ring. This is the one
+     visual affordance keyboard/screen-reader users get, so it's never
+     suppressed. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  code, pre, kbd {
+    @apply font-mono;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
