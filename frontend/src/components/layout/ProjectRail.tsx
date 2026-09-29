@@ -13,6 +13,7 @@ const ITEMS = [
   { to: "test-cases", label: "Casos de prueba" },
   { to: "test-suites", label: "Suites" },
   { to: "test-runs", label: "Ejecuciones" },
+  { to: "reports", label: "Reportes" },
   { to: "environments", label: "Entornos" },
   { to: "settings", label: "Configuración" },
 ];

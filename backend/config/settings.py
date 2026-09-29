@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.test_suites",
     "apps.test_runs",
     "apps.automation",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

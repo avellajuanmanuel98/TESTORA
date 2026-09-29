@@ -9,6 +9,7 @@ import { ProjectOverviewPage } from "@/features/projects/ProjectOverviewPage";
 import { ProjectSettingsPage } from "@/features/projects/ProjectSettingsPage";
 import { ProjectWorkspaceLayout } from "@/features/projects/ProjectWorkspaceLayout";
 import { ProjectsListPage } from "@/features/projects/ProjectsListPage";
+import { ReportsPage } from "@/features/reports/ReportsPage";
 import { TestCaseBuilderPage } from "@/features/test-cases/TestCaseBuilderPage";
 import { TestCasesListPage } from "@/features/test-cases/TestCasesListPage";
 import { TestRunDetailPage } from "@/features/test-runs/TestRunDetailPage";
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="test-suites/:suiteId" element={<TestSuiteDetailPage />} />
           <Route path="test-runs" element={<TestRunsListPage />} />
           <Route path="test-runs/:runId" element={<TestRunDetailPage />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="environments" element={<EnvironmentsPage />} />
           <Route path="settings" element={<ProjectSettingsPage />} />
         </Route>
