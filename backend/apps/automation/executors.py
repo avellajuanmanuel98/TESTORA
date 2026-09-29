@@ -16,7 +16,7 @@ see each function's docstring.
 
 import time
 
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -93,7 +93,34 @@ def clear(driver, context, params):
 
 
 def select(driver, context, params):
-    Select(_find(driver, context, params)).select_by_visible_text(context.resolve(params["value"]))
+    """Waits for the target *option* to exist, not just the <select> tag —
+    PrimeFaces and similar frameworks commonly render an empty dropdown
+    immediately and populate its options via a separate, slightly later
+    AJAX call, so the select itself being present (see _find) says nothing
+    about whether the option a step wants is there yet. Re-finding the
+    select fresh on every poll, rather than reusing one reference, also
+    survives the dropdown being replaced wholesale mid-wait — a stale
+    reference from the previous DOM node would otherwise raise
+    StaleElementReferenceException instead of just trying again."""
+    by, value = _by(context.resolve(params["selector"]))
+    target_text = context.resolve(params["value"])
+    timeout = getattr(context, "timeout_ms", 5000) / 1000
+
+    def option_ready(d):
+        try:
+            select_el = d.find_element(by, value)
+            has_option = any(o.text == target_text for o in Select(select_el).options)
+        except (NoSuchElementException, StaleElementReferenceException):
+            return False
+        return select_el if has_option else False
+
+    try:
+        element = WebDriverWait(driver, timeout).until(option_ready)
+    except TimeoutException:
+        raise NoSuchElementException(
+            f"La opción «{target_text}» no apareció en «{value}» después de esperar {int(timeout * 1000)}ms."
+        )
+    Select(element).select_by_visible_text(target_text)
 
 
 def hover(driver, context, params):
