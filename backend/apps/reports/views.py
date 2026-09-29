@@ -17,6 +17,8 @@ from apps.projects.models import Project, ProjectMembership
 from apps.test_runs.models import TestResult, TestRun
 
 FINISHED_STATUSES = [TestResult.STATUS_PASSED, TestResult.STATUS_FAILED, TestResult.STATUS_ERROR]
+ACTIVE_RUN_STATUSES = [TestRun.STATUS_QUEUED, TestRun.STATUS_RUNNING]
+FINISHED_RUN_STATUSES = [TestRun.STATUS_PASSED, TestRun.STATUS_FAILED, TestRun.STATUS_ERROR]
 
 
 class ProjectReportView(APIView):
@@ -89,5 +91,90 @@ class ProjectReportView(APIView):
                 "flaky_tests": flaky_tests,
                 "top_failing": top_failing,
                 "duration_by_suite": duration_by_suite,
+            }
+        )
+
+
+def _run_summary(run):
+    return {
+        "id": run.id,
+        "project": run.project_id,
+        "project_name": run.project.name,
+        "status": run.status,
+        "suite_name": run.suite.name if run.suite_id else None,
+        "total": run.total,
+        "passed": run.passed,
+        "failed": run.failed,
+        "started_at": run.started_at,
+        "finished_at": run.finished_at,
+    }
+
+
+class OrgOverviewView(APIView):
+    """GET /api/reports/overview/
+
+    Cross-project health snapshot for the global Dashboard: only ever scoped
+    to request.organization and, within it, to the projects the requesting
+    user actually belongs to (ProjectMembership) — never every project in
+    the org regardless of access.
+    """
+
+    permission_classes = [IsOrganizationMember]
+
+    def get(self, request):
+        projects = Project.objects.filter(
+            organization=request.organization, memberships__user=request.user
+        )
+
+        results = TestResult.objects.filter(run__project__in=projects, status__in=FINISHED_STATUSES)
+        total = results.count()
+        passed = results.filter(status=TestResult.STATUS_PASSED).count()
+        pass_rate = round(passed / total * 100, 1) if total else None
+
+        by_test_case = results.values(
+            "test_case", "test_case__name", "run__project__name"
+        ).annotate(
+            passed_count=Count("id", filter=Q(status=TestResult.STATUS_PASSED)),
+            failed_count=Count(
+                "id", filter=Q(status__in=[TestResult.STATUS_FAILED, TestResult.STATUS_ERROR])
+            ),
+        )
+        needs_attention = sorted(
+            (row for row in by_test_case if row["failed_count"] > 0),
+            key=lambda row: row["failed_count"],
+            reverse=True,
+        )[:5]
+        needs_attention = [
+            {
+                "id": row["test_case"],
+                "name": row["test_case__name"],
+                "project_name": row["run__project__name"],
+                "passed": row["passed_count"],
+                "failed": row["failed_count"],
+                "flaky": row["passed_count"] > 0 and row["failed_count"] > 0,
+            }
+            for row in needs_attention
+        ]
+
+        active_runs = (
+            TestRun.objects.filter(project__in=projects, status__in=ACTIVE_RUN_STATUSES)
+            .select_related("project", "suite")
+            .order_by("-created_at")[:5]
+        )
+        recent_runs = (
+            TestRun.objects.filter(project__in=projects, status__in=FINISHED_RUN_STATUSES)
+            .select_related("project", "suite")
+            .order_by("-finished_at")[:5]
+        )
+
+        return Response(
+            {
+                "total_results": total,
+                "passed": passed,
+                "failed": total - passed,
+                "pass_rate": pass_rate,
+                "needs_attention": needs_attention,
+                "active_runs": [_run_summary(r) for r in active_runs],
+                "recent_runs": [_run_summary(r) for r in recent_runs],
             }
         )

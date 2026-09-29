@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { FlaskConical, FolderGit2, Info } from "lucide-react";
+import { AlertTriangle, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/Skeleton";
-import { StatusDot } from "@/components/ui/StatusPill";
-import { useRecentTestCases } from "@/features/dashboard/api";
+import { StatusDot, StatusPill } from "@/components/ui/StatusPill";
+import { useOrgOverview, useRecentTestCases } from "@/features/dashboard/api";
 import { useProjects } from "@/features/projects/api";
-import { formatRelativeTime } from "@/lib/format";
-import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE } from "@/lib/labels";
+import { formatDateTime, formatRelativeTime } from "@/lib/format";
+import { TEST_CASE_STATUS_LABEL, TEST_CASE_STATUS_TONE, TEST_RUN_STATUS_LABEL, TEST_RUN_STATUS_TONE } from "@/lib/labels";
 
 function StatBlock({ label, value }: { label: string; value: string | number }) {
   return (
@@ -20,11 +20,9 @@ function StatBlock({ label, value }: { label: string; value: string | number }) 
 export function DashboardPage() {
   const { data: projects, isLoading: loadingProjects } = useProjects();
   const { data: testCases, isLoading: loadingTestCases } = useRecentTestCases();
+  const { data: overview, isLoading: loadingOverview } = useOrgOverview();
 
   const activeProjects = projects?.results.filter((p) => p.status === "active").length ?? 0;
-  const statusCounts = { draft: 0, active: 0, deprecated: 0 };
-  testCases?.results.forEach((tc) => statusCounts[tc.status]++);
-
   const recent = testCases?.results.slice(0, 8) ?? [];
   const projectNameById = new Map(projects?.results.map((p) => [p.id, p.name]));
 
@@ -35,25 +33,98 @@ export function DashboardPage() {
       <h1 className="mb-1 text-[18px] font-semibold text-fg-primary">Panel</h1>
       <p className="mb-6 text-[13px] text-fg-muted">Estado general de Testora Internal.</p>
 
-      {isLoading ? (
-        <Skeleton className="h-24 w-full" />
+      {loadingOverview ? (
+        <Skeleton className="mb-6 h-24 w-full" />
       ) : (
         <div className="mb-6 flex rounded-lg border border-border-default bg-surface-raised">
+          <StatBlock label="Tasa de aprobación" value={overview?.pass_rate !== null && overview?.pass_rate !== undefined ? `${overview.pass_rate}%` : "—"} />
           <StatBlock label="Proyectos activos" value={activeProjects} />
+          <StatBlock label="Ejecuciones activas" value={overview?.active_runs.length ?? 0} />
           <StatBlock label="Casos de prueba totales" value={testCases?.count ?? 0} />
-          <StatBlock label="Activos" value={statusCounts.active} />
-          <StatBlock label="En borrador" value={statusCounts.draft} />
         </div>
       )}
 
-      <div className="mb-6 flex items-start gap-2.5 rounded-lg border border-info-subtle-border bg-info-subtle px-4 py-3 text-[13px] text-fg-primary">
-        <Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
-        <p>
-          Las métricas agregadas de ejecución (tasa de aprobación, pruebas inestables, tendencias) se suman a este panel
-          en una próxima iteración. Mientras tanto, el progreso y los resultados de cada ejecución están disponibles en{" "}
-          <span className="font-medium text-fg-primary">Ejecuciones</span> dentro de cada proyecto.
-        </p>
-      </div>
+      {(overview?.active_runs.length ?? 0) > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-1.5">
+            <Loader2 className="size-3.5 animate-spin text-accent" aria-hidden />
+            <h2 className="text-[13px] font-semibold text-fg-primary">Ejecuciones activas</h2>
+          </div>
+          <div className="flex flex-col divide-y divide-border-default rounded-lg border border-border-default bg-surface-raised">
+            {overview!.active_runs.map((run) => (
+              <Link
+                key={run.id}
+                to={`/projects/${run.project}/test-runs/${run.id}`}
+                className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-sunken"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <StatusDot tone={TEST_RUN_STATUS_TONE[run.status]} live>
+                    {TEST_RUN_STATUS_LABEL[run.status]}
+                  </StatusDot>
+                  <span className="truncate text-[13px] text-fg-primary">
+                    {run.suite_name ?? "Caso de prueba individual"}
+                  </span>
+                  <span className="text-[12px] text-fg-muted">· {run.project_name}</span>
+                </div>
+                <span className="shrink-0 font-mono text-[12px] text-fg-muted">
+                  {run.passed}/{run.total} aprobados
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(overview?.needs_attention.length ?? 0) > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-1.5">
+            <AlertTriangle className="size-3.5 text-warning" aria-hidden />
+            <h2 className="text-[13px] font-semibold text-fg-primary">Necesita atención</h2>
+          </div>
+          <div className="flex flex-col divide-y divide-border-default rounded-lg border border-border-default bg-surface-raised">
+            {overview!.needs_attention.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="truncate text-[13px] font-medium text-fg-primary">{item.name}</span>
+                  <span className="text-[12px] text-fg-muted">· {item.project_name}</span>
+                  {item.flaky && (
+                    <span className="rounded bg-warning-subtle px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                      inestable
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 font-mono text-[12px] text-danger">{item.failed} fallos</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(overview?.recent_runs.length ?? 0) > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-[13px] font-semibold text-fg-primary">Ejecuciones recientes</h2>
+          <div className="flex flex-col divide-y divide-border-default rounded-lg border border-border-default bg-surface-raised">
+            {overview!.recent_runs.map((run) => (
+              <Link
+                key={run.id}
+                to={`/projects/${run.project}/test-runs/${run.id}`}
+                className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-sunken"
+              >
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <StatusPill tone={TEST_RUN_STATUS_TONE[run.status]}>{TEST_RUN_STATUS_LABEL[run.status]}</StatusPill>
+                  <span className="truncate text-[13px] text-fg-primary">
+                    {run.suite_name ?? "Caso de prueba individual"}
+                  </span>
+                  <span className="text-[12px] text-fg-muted">· {run.project_name}</span>
+                </div>
+                <span className="shrink-0 text-[12px] text-fg-muted">
+                  {run.finished_at ? formatDateTime(run.finished_at) : "—"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-[13px] font-semibold text-fg-primary">Casos de prueba modificados recientemente</h2>
