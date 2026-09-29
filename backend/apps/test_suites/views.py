@@ -25,6 +25,7 @@ class TestSuiteViewSet(OrganizationScopedModelViewSet):
     # its name or membership day-to-day.
     min_delete_role = "admin"
     filterset_fields = ["project"]
+    search_fields = ["name"]
     queryset = TestSuite.objects.select_related("project").prefetch_related("items__test_case")
 
     def get_serializer_class(self):

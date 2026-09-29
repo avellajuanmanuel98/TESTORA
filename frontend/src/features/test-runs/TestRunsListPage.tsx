@@ -1,5 +1,5 @@
 import { PlayCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
@@ -9,23 +9,68 @@ import { useProjectContext } from "@/features/projects/ProjectContext";
 import { useTestRuns } from "@/features/test-runs/api";
 import { formatDateTime, formatRelativeTime } from "@/lib/format";
 import { TEST_RUN_STATUS_LABEL, TEST_RUN_STATUS_TONE } from "@/lib/labels";
+import { cn } from "@/lib/cn";
+
+const STATUS_FILTERS = ["queued", "running", "passed", "failed", "error"] as const;
 
 export function TestRunsListPage() {
   const project = useProjectContext();
   const projectId = project.id.toString();
-  const { data, isLoading } = useTestRuns(projectId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = searchParams.get("status") ?? "";
+  const { data, isLoading } = useTestRuns(projectId, status || undefined);
   const navigate = useNavigate();
+
+  function setStatus(next: string) {
+    setSearchParams(next ? { status: next } : {}, { replace: true });
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
       <div className="mb-5">
         <h1 className="text-[15px] font-semibold text-fg-primary">Ejecuciones</h1>
         <p className="mt-0.5 text-[13px] text-fg-muted">
-          {isLoading ? "Cargando…" : `${data?.count ?? 0} ejecuciones registradas en este proyecto.`}
+          {isLoading
+            ? "Cargando…"
+            : data?.count === 1
+              ? `1 ejecución${status ? " encontrada" : " registrada en este proyecto"}.`
+              : `${data?.count ?? 0} ejecuciones${status ? " encontradas" : " registradas en este proyecto"}.`}
         </p>
       </div>
 
-      {!isLoading && data?.results.length === 0 ? (
+      <div className="mb-4 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setStatus("")}
+          className={cn(
+            "rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors",
+            status === "" ? "bg-accent-subtle text-accent" : "text-fg-muted hover:bg-surface-sunken hover:text-fg-primary"
+          )}
+        >
+          Todas
+        </button>
+        {STATUS_FILTERS.map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStatus(s)}
+            className={cn(
+              "rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors",
+              status === s ? "bg-accent-subtle text-accent" : "text-fg-muted hover:bg-surface-sunken hover:text-fg-primary"
+            )}
+          >
+            {TEST_RUN_STATUS_LABEL[s]}
+          </button>
+        ))}
+      </div>
+
+      {!isLoading && data?.results.length === 0 && status ? (
+        <EmptyState
+          icon={PlayCircle}
+          title="Sin ejecuciones con este estado"
+          description={`Ninguna ejecución tiene el estado "${TEST_RUN_STATUS_LABEL[status] ?? status}".`}
+        />
+      ) : !isLoading && data?.results.length === 0 ? (
         <EmptyState
           icon={PlayCircle}
           title="Todavía no hay ejecuciones"

@@ -60,6 +60,7 @@ class TestCaseViewSet(OrganizationScopedModelViewSet):
     # history) — reserved for admins, unlike editing it day-to-day.
     min_delete_role = "admin"
     filterset_fields = ["project", "status"]
+    search_fields = ["name"]
     queryset = TestCase.objects.select_related("project").prefetch_related("steps")
 
     def get_serializer_class(self):

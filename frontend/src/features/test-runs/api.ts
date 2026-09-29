@@ -9,10 +9,14 @@ const ACTIVE_STATUSES: TestRunStatus[] = ["queued", "running"];
 // Polling, not WebSockets, for run progress (see architecture notes) — the
 // interval only stays active while something in view is actually in
 // flight, so a finished run stops refetching on its own.
-export function useTestRuns(projectId: string) {
+export function useTestRuns(projectId: string, status?: string) {
   return useQuery({
-    queryKey: ["test-runs", projectId],
-    queryFn: () => api.get<Paginated<TestRunListItem>>(`/test-runs/?project=${projectId}`),
+    queryKey: ["test-runs", projectId, status ?? ""],
+    queryFn: () => {
+      const params = new URLSearchParams({ project: projectId });
+      if (status) params.set("status", status);
+      return api.get<Paginated<TestRunListItem>>(`/test-runs/?${params}`);
+    },
     refetchInterval: (query) => {
       const hasActive = query.state.data?.results.some((run) => ACTIVE_STATUSES.includes(run.status));
       return hasActive ? 2000 : false;

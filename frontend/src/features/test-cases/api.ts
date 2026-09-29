@@ -18,10 +18,14 @@ export function useActions() {
   });
 }
 
-export function useTestCases(projectId: string) {
+export function useTestCases(projectId: string, search?: string) {
   return useQuery({
-    queryKey: ["test-cases", projectId],
-    queryFn: () => api.get<Paginated<TestCaseListItem>>(`/test-cases/?project=${projectId}`),
+    queryKey: ["test-cases", projectId, search ?? ""],
+    queryFn: () => {
+      const params = new URLSearchParams({ project: projectId });
+      if (search) params.set("search", search);
+      return api.get<Paginated<TestCaseListItem>>(`/test-cases/?${params}`);
+    },
   });
 }
 

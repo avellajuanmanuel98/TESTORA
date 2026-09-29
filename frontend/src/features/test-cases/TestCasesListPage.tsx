@@ -1,6 +1,6 @@
-import { type FormEvent, useState } from "react";
-import { FlaskConical, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { type FormEvent, useEffect, useState } from "react";
+import { FlaskConical, Plus, Search } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -72,9 +72,24 @@ function NewTestCaseModal({ open, onClose, projectId }: { open: boolean; onClose
 export function TestCasesListPage() {
   const project = useProjectContext();
   const projectId = project.id.toString();
-  const { data, isLoading } = useTestCases(projectId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSearch = searchParams.get("q") ?? "";
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const { data, isLoading } = useTestCases(projectId, urlSearch || undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Debounce the URL (and therefore the query) update so typing doesn't
+  // fire a request per keystroke; the input itself stays fully responsive.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchParams(searchInput ? { q: searchInput } : {}, { replace: true });
+    }, 300);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  const isFiltering = urlSearch.length > 0;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-6">
@@ -82,7 +97,11 @@ export function TestCasesListPage() {
         <div>
           <h1 className="text-[15px] font-semibold text-fg-primary">Casos de prueba</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
-            {isLoading ? "Cargando…" : `${data?.count ?? 0} casos de prueba en este proyecto.`}
+            {isLoading
+              ? "Cargando…"
+              : data?.count === 1
+                ? `1 caso de prueba${isFiltering ? " encontrado" : " en este proyecto"}.`
+                : `${data?.count ?? 0} casos de prueba${isFiltering ? " encontrados" : " en este proyecto"}.`}
           </p>
         </div>
         <Button variant="primary" onClick={() => setModalOpen(true)}>
@@ -91,7 +110,23 @@ export function TestCasesListPage() {
         </Button>
       </div>
 
-      {!isLoading && data?.results.length === 0 ? (
+      <div className="relative mb-4 max-w-xs">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-fg-muted" aria-hidden />
+        <Input
+          placeholder="Buscar por nombre…"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="pl-8"
+        />
+      </div>
+
+      {!isLoading && data?.results.length === 0 && isFiltering ? (
+        <EmptyState
+          icon={Search}
+          title="Sin resultados"
+          description={`Ningún caso de prueba coincide con "${urlSearch}".`}
+        />
+      ) : !isLoading && data?.results.length === 0 ? (
         <EmptyState
           icon={FlaskConical}
           title="Sin casos de prueba todavía"
