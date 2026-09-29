@@ -93,34 +93,31 @@ def clear(driver, context, params):
 
 
 def select(driver, context, params):
-    """Waits for the target *option* to exist, not just the <select> tag —
-    PrimeFaces and similar frameworks commonly render an empty dropdown
-    immediately and populate its options via a separate, slightly later
-    AJAX call, so the select itself being present (see _find) says nothing
-    about whether the option a step wants is there yet. Re-finding the
-    select fresh on every poll, rather than reusing one reference, also
-    survives the dropdown being replaced wholesale mid-wait — a stale
-    reference from the previous DOM node would otherwise raise
-    StaleElementReferenceException instead of just trying again."""
+    """Retries the *entire* find-and-select as one attempt, not a
+    check-then-act pair — a PrimeFaces cascading dropdown commonly redraws
+    itself more than once while its options are still settling, so
+    confirming the option exists and then selecting it as two separate
+    steps leaves a real gap: the widget can re-render in between, and the
+    second step fails even though the first just succeeded. Re-fetching the
+    select and calling select_by_visible_text fresh on every attempt closes
+    that gap — each attempt either fully succeeds against whatever is on
+    the page *right now*, or fails and retries, with no state carried
+    across attempts to go stale."""
     by, value = _by(context.resolve(params["selector"]))
     target_text = context.resolve(params["value"])
     timeout = getattr(context, "timeout_ms", 5000) / 1000
+    deadline = time.monotonic() + timeout
 
-    def option_ready(d):
+    while True:
         try:
-            select_el = d.find_element(by, value)
-            has_option = any(o.text == target_text for o in Select(select_el).options)
+            Select(driver.find_element(by, value)).select_by_visible_text(target_text)
+            return
         except (NoSuchElementException, StaleElementReferenceException):
-            return False
-        return select_el if has_option else False
-
-    try:
-        element = WebDriverWait(driver, timeout).until(option_ready)
-    except TimeoutException:
-        raise NoSuchElementException(
-            f"La opción «{target_text}» no apareció en «{value}» después de esperar {int(timeout * 1000)}ms."
-        )
-    Select(element).select_by_visible_text(target_text)
+            if time.monotonic() >= deadline:
+                raise NoSuchElementException(
+                    f"La opción «{target_text}» no apareció en «{value}» después de esperar {int(timeout * 1000)}ms."
+                )
+            time.sleep(0.2)
 
 
 def hover(driver, context, params):
