@@ -50,6 +50,7 @@ interface StepRowProps {
   canEdit: boolean;
   isTechnical: boolean;
   saving: boolean;
+  variables: string[];
   onToggleExpand: () => void;
   onSave: (draft: Draft) => void;
   onToggleEnabled: () => void;
@@ -74,6 +75,7 @@ export function StepRow({
   canEdit,
   isTechnical,
   saving,
+  variables,
   onToggleExpand,
   onSave,
   onToggleEnabled,
@@ -181,6 +183,7 @@ export function StepRow({
             onChange={(key, value) =>
               setDraft((d) => ({ ...d, params: { ...d.params, [key]: value } }))
             }
+            variables={variables}
           />
 
           <div className="mt-3 grid grid-cols-2 gap-3 border-t border-border-default pt-3">

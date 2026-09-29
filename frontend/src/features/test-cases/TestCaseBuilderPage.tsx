@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { toast } from "@/components/ui/toast-store";
 import { useCurrentUser } from "@/features/auth/auth-store";
+import { useEnvironments } from "@/features/environments/api";
 import { useProjectContext } from "@/features/projects/ProjectContext";
 import {
   useActions,
@@ -32,6 +33,7 @@ export function TestCaseBuilderPage() {
   const user = useCurrentUser();
   const { data: testCase, isLoading } = useTestCase(testCaseId);
   const { data: actions } = useActions();
+  const { data: environments } = useEnvironments(projectId!);
 
   const [expandedStepId, setExpandedStepId] = useState<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
@@ -57,6 +59,10 @@ export function TestCaseBuilderPage() {
       </div>
     );
   }
+
+  const variableKeys = [
+    ...new Set(environments?.results.flatMap((env) => env.variables.map((v) => v.key)) ?? []),
+  ].sort();
 
   const actionsByKey = Object.fromEntries(actions.map((a) => [a.key, a]));
   const actionsByCategory = actions.reduce<Record<string, typeof actions>>((acc, action) => {
@@ -137,6 +143,7 @@ export function TestCaseBuilderPage() {
                 actionsByKey[step.action_type]?.params.some((p) => p.type === "selector" || p.type === "url")
               )}
               saving={updateStep.isPending}
+              variables={variableKeys}
               onToggleExpand={() => setExpandedStepId(expandedStepId === step.id ? null : step.id)}
               onSave={(draft) =>
                 updateStep.mutate(
