@@ -4,6 +4,7 @@ import { api } from "@/lib/api-client";
 import type { Paginated } from "@/lib/types";
 import type {
   ActionDefinition,
+  RecordingSession,
   TestCaseDetail,
   TestCaseListItem,
   TestCaseStatus,
@@ -29,11 +30,14 @@ export function useTestCases(projectId: string, search?: string) {
   });
 }
 
-export function useTestCase(testCaseId: string | undefined) {
+export function useTestCase(testCaseId: string | undefined, live = false) {
   return useQuery({
     queryKey: ["test-cases", "detail", testCaseId],
     queryFn: () => api.get<TestCaseDetail>(`/test-cases/${testCaseId}/`),
     enabled: Boolean(testCaseId),
+    // While a recording is in progress, poll fast so new steps appear as
+    // they're captured instead of waiting for a manual refresh.
+    refetchInterval: live ? 1500 : false,
   });
 }
 
@@ -134,5 +138,21 @@ export function useReorderSteps(testCaseId: string) {
     mutationFn: (stepIds: number[]) =>
       api.post<TestStep[]>(`/test-cases/${testCaseId}/reorder-steps/`, { step_ids: stepIds }),
     onSuccess: () => invalidateTestCase(queryClient, testCaseId),
+  });
+}
+
+export function useStartRecording(testCaseId: string) {
+  return useMutation({
+    mutationFn: (environmentId: number) =>
+      api.post<RecordingSession>(`/test-cases/${testCaseId}/start-recording/`, { environment: environmentId }),
+  });
+}
+
+export function useRecordingSession(sessionId: number | null) {
+  return useQuery({
+    queryKey: ["recording-sessions", sessionId],
+    queryFn: () => api.get<RecordingSession>(`/recording-sessions/${sessionId}/`),
+    enabled: sessionId !== null,
+    refetchInterval: (query) => (query.state.data?.status === "recording" ? 1000 : false),
   });
 }

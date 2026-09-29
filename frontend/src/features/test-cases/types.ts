@@ -45,3 +45,16 @@ export interface ActionDefinition {
   category: string;
   params: ActionParamDefinition[];
 }
+
+export type RecordingStatus = "recording" | "finished" | "error";
+
+export interface RecordingSession {
+  id: number;
+  test_case: number;
+  environment: number;
+  status: RecordingStatus;
+  steps_captured: number;
+  error_message: string;
+  created_at: string;
+  finished_at: string | null;
+}

@@ -16,13 +16,17 @@ class SeleniumSession:
     """Context manager that always calls driver.quit(), even on crash — a
     run must never stay stuck "running" because a browser leaked."""
 
-    def __init__(self, browser: str = "chrome"):
+    def __init__(self, browser: str = "chrome", headless: bool | None = None):
         self.browser = browser
+        # None means "use the project-wide default" — the recorder always
+        # passes headless=False explicitly, since a window the user can
+        # actually click in is the entire point of recording.
+        self.headless = settings.SELENIUM_HEADLESS if headless is None else headless
         self.driver = None
 
     def __enter__(self):
         options = Options()
-        if settings.SELENIUM_HEADLESS:
+        if self.headless:
             options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PlayCircle, Trash2, X } from "lucide-react";
+import { Circle, PlayCircle, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Badge, StatusPill } from "@/components/ui/StatusPill";
@@ -16,14 +16,18 @@ export function TestCaseHeader({
   testCase,
   canEdit,
   canDelete,
+  isRecording,
   projectId,
   onRunClick,
+  onRecordClick,
 }: {
   testCase: TestCaseDetail;
   canEdit: boolean;
   canDelete: boolean;
+  isRecording: boolean;
   projectId: string;
   onRunClick: () => void;
+  onRecordClick: () => void;
 }) {
   const update = useUpdateTestCase(testCase.id.toString(), projectId);
   const deleteTestCase = useDeleteTestCase(projectId);
@@ -49,7 +53,18 @@ export function TestCaseHeader({
           {TEST_CASE_STATUS_LABEL[testCase.status]}
         </StatusPill>
         <div className="ml-auto flex items-center gap-1">
-          <Button variant="secondary" size="sm" onClick={onRunClick} disabled={testCase.steps.length === 0}>
+          {canEdit && (
+            <Button variant="secondary" size="sm" onClick={onRecordClick} disabled={isRecording}>
+              <Circle className={isRecording ? "size-3.5 fill-danger text-danger" : "size-3.5"} />
+              {isRecording ? "Grabando…" : "Grabar"}
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onRunClick}
+            disabled={testCase.steps.length === 0 || isRecording}
+          >
             <PlayCircle className="size-3.5" />
             Ejecutar
           </Button>

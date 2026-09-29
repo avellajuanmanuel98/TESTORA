@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from apps.automation.views import RecordingSessionViewSet
 from apps.environments.views import EnvironmentVariableViewSet, EnvironmentViewSet
 from apps.projects.views import ProjectViewSet
 from apps.reports.views import OrgOverviewView, ProjectReportView
@@ -20,6 +21,7 @@ router.register("test-steps", TestStepViewSet, basename="test-step")
 router.register("test-suites", TestSuiteViewSet, basename="test-suite")
 router.register("test-suite-items", TestSuiteItemViewSet, basename="test-suite-item")
 router.register("test-runs", TestRunViewSet, basename="test-run")
+router.register("recording-sessions", RecordingSessionViewSet, basename="recording-session")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

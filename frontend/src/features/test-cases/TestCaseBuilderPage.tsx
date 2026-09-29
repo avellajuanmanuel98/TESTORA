@@ -1,10 +1,12 @@
-import { type DragEvent, useState } from "react";
-import { Plus } from "lucide-react";
+import { type DragEvent, useEffect, useRef, useState } from "react";
+import { Plus, Video } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { StatusDot } from "@/components/ui/StatusPill";
 import { toast } from "@/components/ui/toast-store";
 import { useCurrentUser } from "@/features/auth/auth-store";
 import { useEnvironments } from "@/features/environments/api";
@@ -14,11 +16,13 @@ import {
   useCreateStep,
   useDeleteStep,
   useDuplicateStep,
+  useRecordingSession,
   useReorderSteps,
   useTestCase,
   useUpdateStep,
 } from "@/features/test-cases/api";
 import { CATEGORY_LABELS } from "@/features/test-cases/action-icons";
+import { RecordModal } from "@/features/test-cases/RecordModal";
 import { StepRow } from "@/features/test-cases/StepRow";
 import { TestCaseHeader } from "@/features/test-cases/TestCaseHeader";
 import { RunModal } from "@/features/test-runs/RunModal";
@@ -31,7 +35,12 @@ export function TestCaseBuilderPage() {
   const navigate = useNavigate();
   const project = useProjectContext();
   const user = useCurrentUser();
-  const { data: testCase, isLoading } = useTestCase(testCaseId);
+  const queryClient = useQueryClient();
+  const [recordingSessionId, setRecordingSessionId] = useState<number | null>(null);
+  const { data: recordingSession } = useRecordingSession(recordingSessionId);
+  const isRecording = recordingSession?.status === "recording";
+
+  const { data: testCase, isLoading } = useTestCase(testCaseId, isRecording);
   const { data: actions } = useActions();
   const { data: environments } = useEnvironments(projectId!);
 
@@ -40,12 +49,32 @@ export function TestCaseBuilderPage() {
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const [addingAction, setAddingAction] = useState("");
   const [runModalOpen, setRunModalOpen] = useState(false);
+  const [recordModalOpen, setRecordModalOpen] = useState(false);
 
   const createStep = useCreateStep(testCaseId!);
   const updateStep = useUpdateStep(testCaseId!);
   const deleteStep = useDeleteStep(testCaseId!);
   const duplicateStep = useDuplicateStep(testCaseId!);
   const reorderSteps = useReorderSteps(testCaseId!);
+
+  // Announce the recording's outcome exactly once, right when its status
+  // flips away from "recording" — not on every poll tick that follows.
+  const announcedFinish = useRef<number | null>(null);
+  useEffect(() => {
+    if (!recordingSession || recordingSession.status === "recording") return;
+    if (announcedFinish.current === recordingSession.id) return;
+    announcedFinish.current = recordingSession.id;
+    queryClient.invalidateQueries({ queryKey: ["test-cases", "detail", testCaseId] });
+    if (recordingSession.status === "finished") {
+      toast.success(
+        recordingSession.steps_captured > 0
+          ? `Grabación finalizada: ${recordingSession.steps_captured} paso${recordingSession.steps_captured === 1 ? "" : "s"} agregado${recordingSession.steps_captured === 1 ? "" : "s"}.`
+          : "Grabación finalizada, pero no se capturó ninguna acción."
+      );
+    } else {
+      toast.error(recordingSession.error_message || "La grabación se interrumpió inesperadamente.");
+    }
+  }, [recordingSession, queryClient, testCaseId]);
 
   const membership = project.members.find((m) => m.user.id === user?.id);
   const canEdit = Boolean(membership && ROLE_RANK[membership.role] >= ROLE_RANK.qa_engineer);
@@ -122,9 +151,22 @@ export function TestCaseBuilderPage() {
           testCase={testCase}
           canEdit={canEdit}
           canDelete={canDelete}
+          isRecording={isRecording}
           projectId={projectId!}
           onRunClick={() => setRunModalOpen(true)}
+          onRecordClick={() => setRecordModalOpen(true)}
         />
+
+        {isRecording && recordingSession && (
+          <div className="flex items-center gap-2 border-b border-border-default bg-danger-subtle px-6 py-2.5">
+            <Video className="size-3.5 shrink-0 text-danger" aria-hidden />
+            <StatusDot tone="danger" live>
+              Grabando — {recordingSession.steps_captured} paso{recordingSession.steps_captured === 1 ? "" : "s"} capturado
+              {recordingSession.steps_captured === 1 ? "" : "s"}
+            </StatusDot>
+            <span className="text-[12px] text-fg-muted">Cerrá la ventana del navegador para terminar.</span>
+          </div>
+        )}
 
         <div>
           {testCase.steps.length === 0 && (
@@ -235,6 +277,18 @@ export function TestCaseBuilderPage() {
         projectId={projectId!}
         testCaseId={testCase.id}
         onRunCreated={(runId) => navigate(`/projects/${projectId}/test-runs/${runId}`)}
+      />
+
+      <RecordModal
+        open={recordModalOpen}
+        onClose={() => setRecordModalOpen(false)}
+        projectId={projectId!}
+        testCaseId={testCaseId!}
+        onRecordingStarted={(sessionId) => {
+          announcedFinish.current = null;
+          setRecordingSessionId(sessionId);
+          toast.success("Grabación iniciada — se abrió una ventana de Chrome.");
+        }}
       />
     </div>
   );

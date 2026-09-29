@@ -10,14 +10,27 @@ import time
 
 from celery import shared_task
 from django.core.files.base import ContentFile
+from django.db.models import Max
 from django.utils import timezone
+from selenium.common.exceptions import WebDriverException
 
 from apps.automation.context import ExecutionContext
 from apps.automation.engine import SeleniumSession
 from apps.automation.executors import EXECUTORS
+from apps.automation.models import RecordingSession
+from apps.automation.recorder_js import DRAIN_JS, INJECT_JS
+from apps.test_cases.models import TestStep
 from apps.test_runs.models import Evidence, StepResult, TestResult, TestRun
 
 logger = logging.getLogger(__name__)
+
+# How often to re-inject the recorder script and drain captured events.
+# Short, deliberately: a page navigation (clicking a link, submitting a
+# form) destroys the page's JS state, taking any not-yet-drained events
+# with it — verified in practice losing a click that immediately submits a
+# form. 200ms keeps that window small without spamming the browser with
+# execute_script calls between actions.
+RECORDER_POLL_SECONDS = 0.2
 
 
 @shared_task(bind=True, acks_late=True, soft_time_limit=300, time_limit=360)
@@ -154,3 +167,87 @@ def _capture_evidence(driver, result, step_result, only_screenshot=False):
         )
     except Exception:
         logger.exception("Could not capture HTML evidence for step_result %s", step_result.id)
+
+
+@shared_task(bind=True, soft_time_limit=1800, time_limit=1860)
+def record_session(self, session_id):
+    """Drives a RecordingSession: opens a real, visible browser at the
+    environment's base URL, injects a small event-capture script, and polls
+    it for clicks/typed values/selections — turning each into a TestStep as
+    it happens. There is no explicit "stop" endpoint: closing the browser
+    window is how the user ends a recording, which surfaces here as
+    WebDriverException on the next poll — a normal, expected way for this
+    task to finish, not a crash.
+    """
+    try:
+        session = RecordingSession.objects.select_related("test_case", "environment").get(pk=session_id)
+    except RecordingSession.DoesNotExist:
+        logger.warning("record_session: session %s no longer exists", session_id)
+        return
+
+    session.celery_task_id = self.request.id or ""
+    session.save(update_fields=["celery_task_id"])
+
+    next_order = (session.test_case.steps.aggregate(m=Max("order"))["m"] or 0) + 1
+
+    try:
+        # headless=False is the entire point here — the user needs a window
+        # they can actually click and type into.
+        with SeleniumSession(browser=session.environment.browser, headless=False) as driver:
+            driver.get(session.environment.base_url)
+            while True:
+                try:
+                    driver.execute_script(INJECT_JS)
+                    events = driver.execute_script(DRAIN_JS) or []
+                except WebDriverException:
+                    # The window was closed (or the browser crashed) — either
+                    # way, recording is over. Nothing left to clean up: the
+                    # `with` block's __exit__ still calls driver.quit(),
+                    # which is a harmless no-op on an already-gone session.
+                    break
+
+                for event in events:
+                    step = _step_from_recorder_event(session.test_case, next_order, event)
+                    if step is None:
+                        continue
+                    step.save()
+                    next_order += 1
+                    session.steps_captured += 1
+                if events:
+                    session.save(update_fields=["steps_captured"])
+
+                time.sleep(RECORDER_POLL_SECONDS)
+    except Exception:
+        logger.exception("record_session: session %s crashed", session_id)
+        session.status = RecordingSession.STATUS_ERROR
+        session.error_message = "La grabación se interrumpió inesperadamente."
+        session.finished_at = timezone.now()
+        session.save(update_fields=["status", "error_message", "finished_at"])
+        return
+
+    session.status = RecordingSession.STATUS_FINISHED
+    session.finished_at = timezone.now()
+    session.save(update_fields=["status", "finished_at"])
+
+
+def _step_from_recorder_event(test_case, order, event):
+    """Maps one captured browser event to an unsaved TestStep, or None for
+    an event type this recorder doesn't (yet) understand. Assertions are
+    deliberately never inferred here — recording captures actions; a human
+    adds the verifications afterward in the Builder."""
+    event_type = event.get("type")
+    selector = event.get("selector")
+    if not selector:
+        return None
+
+    if event_type == "click":
+        text = (event.get("text") or "").strip()
+        note = f"Grabado: clic en «{text}»" if text else "Grabado automáticamente"
+        params = {"selector": selector}
+    elif event_type in ("input_text", "select"):
+        note = "Grabado automáticamente"
+        params = {"selector": selector, "value": event.get("value", "")}
+    else:
+        return None
+
+    return TestStep(test_case=test_case, order=order, action_type=event_type, params=params, note=note)

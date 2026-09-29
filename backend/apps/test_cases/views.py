@@ -5,7 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.automation.models import RecordingSession
+from apps.automation.serializers import RecordingSessionSerializer
 from apps.core.viewsets import OrganizationScopedModelViewSet
+from apps.environments.models import Environment
 from apps.test_cases.actions import ACTIONS
 from apps.test_cases.models import TestCase, TestStep
 from apps.test_cases.serializers import (
@@ -105,6 +108,38 @@ class TestCaseViewSet(OrganizationScopedModelViewSet):
         # order. Query fresh instead.
         fresh_steps = TestStep.objects.filter(test_case=test_case).order_by("order")
         return Response(TestStepSerializer(fresh_steps, many=True).data)
+
+    @action(detail=True, methods=["post"], url_path="start-recording")
+    def start_recording(self, request, pk=None):
+        # Imported here, not at module level — matches TestRunViewSet:
+        # importing this view module should never require Celery/Selenium
+        # to be importable (e.g. in tests that only exercise the API).
+        from apps.automation.tasks import record_session
+
+        test_case = self.get_object()
+        self._require_write_role(test_case.project)
+
+        if RecordingSession.objects.filter(
+            test_case=test_case, status=RecordingSession.STATUS_RECORDING
+        ).exists():
+            return Response(
+                {"detail": "Ya hay una grabación en curso para este caso de prueba."}, status=400
+            )
+
+        environment = Environment.objects.filter(
+            pk=request.data.get("environment"), project=test_case.project
+        ).first()
+        if environment is None:
+            return Response({"detail": "Selecciona un entorno válido de este proyecto."}, status=400)
+
+        session = RecordingSession.objects.create(
+            test_case=test_case, environment=environment, started_by=request.user
+        )
+        # Same on_commit discipline as TestRunViewSet.perform_create: the
+        # worker must never pick up a RecordingSession row that isn't
+        # actually visible in the database yet.
+        transaction.on_commit(lambda: record_session.delay(session.id))
+        return Response(RecordingSessionSerializer(session).data, status=201)
 
 
 class TestStepViewSet(OrganizationScopedModelViewSet):
