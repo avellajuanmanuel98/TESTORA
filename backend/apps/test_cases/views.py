@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Count, Max
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -140,6 +141,33 @@ class TestCaseViewSet(OrganizationScopedModelViewSet):
         # actually visible in the database yet.
         transaction.on_commit(lambda: record_session.delay(session.id))
         return Response(RecordingSessionSerializer(session).data, status=201)
+
+    @action(detail=True, methods=["post"], url_path="cancel-recording")
+    def cancel_recording(self, request, pk=None):
+        """Marks any "recording" session on this test case as errored.
+
+        This is an escape hatch, not a clean stop: it does not (and, with
+        Celery's solo pool on Windows, realistically cannot) reliably kill
+        the task or close its browser window if one is genuinely still
+        running — it only frees the test case up for a new recording. The
+        one guaranteed case it fixes is a session stuck "recording" forever
+        because its task never actually ran at all (e.g. dispatched to a
+        worker that hadn't picked up new code yet), which otherwise has no
+        recovery path short of editing the database.
+        """
+        test_case = self.get_object()
+        self._require_write_role(test_case.project)
+
+        updated = RecordingSession.objects.filter(
+            test_case=test_case, status=RecordingSession.STATUS_RECORDING
+        ).update(
+            status=RecordingSession.STATUS_ERROR,
+            error_message="Cancelado manualmente.",
+            finished_at=timezone.now(),
+        )
+        if not updated:
+            return Response({"detail": "No hay ninguna grabación en curso para cancelar."}, status=400)
+        return Response(status=204)
 
 
 class TestStepViewSet(OrganizationScopedModelViewSet):

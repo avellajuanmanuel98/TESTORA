@@ -156,3 +156,25 @@ export function useRecordingSession(sessionId: number | null) {
     refetchInterval: (query) => (query.state.data?.status === "recording" ? 1000 : false),
   });
 }
+
+// Discovers a recording already in progress for this test case that this
+// page didn't itself start — a different tab, an earlier visit, or one
+// left stuck by a worker restart. Without this, a stale "recording" row is
+// invisible (and uncancellable) to anyone who didn't click the button that
+// created it.
+export function useActiveRecordingSession(testCaseId: string) {
+  return useQuery({
+    queryKey: ["recording-sessions", "active", testCaseId],
+    queryFn: () =>
+      api.get<Paginated<RecordingSession>>(
+        `/recording-sessions/?test_case=${testCaseId}&status=recording&page_size=1`
+      ),
+    select: (data) => data.results[0] ?? null,
+  });
+}
+
+export function useCancelRecording(testCaseId: string) {
+  return useMutation({
+    mutationFn: () => api.post(`/test-cases/${testCaseId}/cancel-recording/`),
+  });
+}

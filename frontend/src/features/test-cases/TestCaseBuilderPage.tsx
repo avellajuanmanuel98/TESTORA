@@ -13,6 +13,8 @@ import { useEnvironments } from "@/features/environments/api";
 import { useProjectContext } from "@/features/projects/ProjectContext";
 import {
   useActions,
+  useActiveRecordingSession,
+  useCancelRecording,
   useCreateStep,
   useDeleteStep,
   useDuplicateStep,
@@ -39,6 +41,17 @@ export function TestCaseBuilderPage() {
   const [recordingSessionId, setRecordingSessionId] = useState<number | null>(null);
   const { data: recordingSession } = useRecordingSession(recordingSessionId);
   const isRecording = recordingSession?.status === "recording";
+  const cancelRecording = useCancelRecording(testCaseId!);
+
+  // Adopt a recording already in progress for this test case that this page
+  // didn't itself start (a different tab, an earlier visit, one left stuck
+  // by a worker restart) — otherwise it's invisible here and uncancellable.
+  const { data: activeSession } = useActiveRecordingSession(testCaseId!);
+  useEffect(() => {
+    if (activeSession && recordingSessionId === null) {
+      setRecordingSessionId(activeSession.id);
+    }
+  }, [activeSession, recordingSessionId]);
 
   const { data: testCase, isLoading } = useTestCase(testCaseId, isRecording);
   const { data: actions } = useActions();
@@ -165,6 +178,20 @@ export function TestCaseBuilderPage() {
               {recordingSession.steps_captured === 1 ? "" : "s"}
             </StatusDot>
             <span className="text-[12px] text-fg-muted">Cerrá la ventana del navegador para terminar.</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={() =>
+                cancelRecording.mutate(undefined, {
+                  onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recording-sessions", recordingSessionId] }),
+                  onError: (err) => toast.error(err instanceof ApiError ? err.message : "No se pudo cancelar la grabación."),
+                })
+              }
+              loading={cancelRecording.isPending}
+            >
+              Cancelar
+            </Button>
           </div>
         )}
 
