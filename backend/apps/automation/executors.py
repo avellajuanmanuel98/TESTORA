@@ -16,11 +16,30 @@ see each function's docstring.
 
 import time
 
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, TimeoutException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+    TimeoutException,
+)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
+
+# Exceptions that mean "the DOM is mid-mutation right now, this exact
+# attempt just lost the race" rather than "this is genuinely wrong" — worth
+# retrying against a freshly re-found element. Confirmed in practice that a
+# single replaced element can surface as any of these depending on exactly
+# when Selenium's interactability check runs relative to the DOM swap, not
+# just StaleElementReferenceException.
+TRANSIENT_ELEMENT_ERRORS = (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    ElementNotInteractableException,
+    ElementClickInterceptedException,
+)
 
 
 def _by(selector: str):
@@ -30,21 +49,40 @@ def _by(selector: str):
     return By.CSS_SELECTOR, selector
 
 
-def _find(driver, context, params):
-    """Waits up to the step's own timeout_ms for the element to appear,
-    instead of failing the instant it isn't in the DOM yet. This is what
-    makes a cascading dropdown (select a country, wait for the AJAX call
-    that repopulates the province select) work without a manual "Esperar"
-    step before every dependent field — real-world JSF/PrimeFaces forms hit
-    this constantly."""
+def _act(driver, context, params, action):
+    """Retries find-element-then-`action(element)` as a single attempt,
+    re-fetching the element fresh each time, until one attempt fully
+    succeeds or the step's timeout_ms runs out.
+
+    This is deliberately not "wait for presence, then act separately" —
+    that two-step shape has a real gap in it: PrimeFaces (and similar
+    AJAX-heavy frameworks) routinely redraw a field after it first appears
+    but before a script has time to act on it, so a reference obtained one
+    moment earlier goes stale by the time it's used. Retrying the whole
+    find-and-act pair as one unit means every attempt is against whatever
+    is on the page *right now* — no state carried across attempts for the
+    page to invalidate out from under it. Confirmed necessary in practice
+    across more than one action type on the same real-world form (a
+    cascading `select`, then `input_text` on a different field) — this
+    covers every interactive action once instead of one at a time.
+
+    `action` may itself raise AssertionError (for assertion actions) — that
+    propagates immediately, uninterrupted by this retry loop, since a
+    genuine assertion failure is not the same thing as "the element isn't
+    stable yet"."""
     by, value = _by(context.resolve(params["selector"]))
     timeout = getattr(context, "timeout_ms", 5000) / 1000
-    try:
-        return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value)))
-    except TimeoutException:
-        raise NoSuchElementException(
-            f"No se encontró el elemento «{value}» después de esperar {int(timeout * 1000)}ms."
-        )
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            element = driver.find_element(by, value)
+            return action(element)
+        except TRANSIENT_ELEMENT_ERRORS:
+            if time.monotonic() >= deadline:
+                raise NoSuchElementException(
+                    f"No se pudo interactuar con «{value}» después de esperar {int(timeout * 1000)}ms."
+                )
+            time.sleep(0.2)
 
 
 def open_url(driver, context, params):
@@ -75,67 +113,54 @@ def screenshot(driver, context, params):
 
 
 def click(driver, context, params):
-    _find(driver, context, params).click()
+    _act(driver, context, params, lambda el: el.click())
 
 
 def double_click(driver, context, params):
-    ActionChains(driver).double_click(_find(driver, context, params)).perform()
+    _act(driver, context, params, lambda el: ActionChains(driver).double_click(el).perform())
 
 
 def input_text(driver, context, params):
-    element = _find(driver, context, params)
-    element.clear()
-    element.send_keys(context.resolve(params["value"]))
+    value = context.resolve(params["value"])
+
+    def do(el):
+        el.clear()
+        el.send_keys(value)
+
+    _act(driver, context, params, do)
 
 
 def clear(driver, context, params):
-    _find(driver, context, params).clear()
+    _act(driver, context, params, lambda el: el.clear())
 
 
 def select(driver, context, params):
-    """Retries the *entire* find-and-select as one attempt, not a
-    check-then-act pair — a PrimeFaces cascading dropdown commonly redraws
-    itself more than once while its options are still settling, so
-    confirming the option exists and then selecting it as two separate
-    steps leaves a real gap: the widget can re-render in between, and the
-    second step fails even though the first just succeeded. Re-fetching the
-    select and calling select_by_visible_text fresh on every attempt closes
-    that gap — each attempt either fully succeeds against whatever is on
-    the page *right now*, or fails and retries, with no state carried
-    across attempts to go stale."""
-    by, value = _by(context.resolve(params["selector"]))
     target_text = context.resolve(params["value"])
-    timeout = getattr(context, "timeout_ms", 5000) / 1000
-    deadline = time.monotonic() + timeout
-
-    while True:
-        try:
-            Select(driver.find_element(by, value)).select_by_visible_text(target_text)
-            return
-        except (NoSuchElementException, StaleElementReferenceException):
-            if time.monotonic() >= deadline:
-                raise NoSuchElementException(
-                    f"La opción «{target_text}» no apareció en «{value}» después de esperar {int(timeout * 1000)}ms."
-                )
-            time.sleep(0.2)
+    _act(driver, context, params, lambda el: Select(el).select_by_visible_text(target_text))
 
 
 def hover(driver, context, params):
-    ActionChains(driver).move_to_element(_find(driver, context, params)).perform()
+    _act(driver, context, params, lambda el: ActionChains(driver).move_to_element(el).perform())
 
 
 def scroll(driver, context, params):
     if params.get("selector"):
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", _find(driver, context, params))
+        _act(
+            driver, context, params,
+            lambda el: driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el),
+        )
     else:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
 
 def assert_text(driver, context, params):
-    element = _find(driver, context, params)
     expected = context.resolve(params["value"])
-    if expected not in element.text:
-        raise AssertionError(f"Se esperaba que el texto contuviera «{expected}», se encontró «{element.text}».")
+
+    def do(el):
+        if expected not in el.text:
+            raise AssertionError(f"Se esperaba que el texto contuviera «{expected}», se encontró «{el.text}».")
+
+    _act(driver, context, params, do)
 
 
 def assert_element_exists(driver, context, params):
@@ -147,9 +172,11 @@ def assert_element_exists(driver, context, params):
 
 
 def assert_element_visible(driver, context, params):
-    element = _find(driver, context, params)
-    if not element.is_displayed():
-        raise AssertionError(f"El elemento «{params['selector']}» existe pero no es visible.")
+    def do(el):
+        if not el.is_displayed():
+            raise AssertionError(f"El elemento «{params['selector']}» existe pero no es visible.")
+
+    _act(driver, context, params, do)
 
 
 def assert_url(driver, context, params):
@@ -162,11 +189,14 @@ def assert_url(driver, context, params):
 
 
 def assert_attribute(driver, context, params):
-    element = _find(driver, context, params)
     expected = context.resolve(params["value"])
-    actual = element.get_attribute(params["attribute"])
-    if str(actual) != str(expected):
-        raise AssertionError(f"Atributo «{params['attribute']}» = «{actual}», se esperaba «{expected}».")
+
+    def do(el):
+        actual = el.get_attribute(params["attribute"])
+        if str(actual) != str(expected):
+            raise AssertionError(f"Atributo «{params['attribute']}» = «{actual}», se esperaba «{expected}».")
+
+    _act(driver, context, params, do)
 
 
 def assert_page_title(driver, context, params):
