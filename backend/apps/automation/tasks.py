@@ -189,12 +189,32 @@ def record_session(self, session_id):
     session.save(update_fields=["celery_task_id"])
 
     next_order = (session.test_case.steps.aggregate(m=Max("order"))["m"] or 0) + 1
+    # A brand-new test case has no step of its own to navigate anywhere —
+    # replaying it later opens a fresh browser session that starts on a
+    # blank page, so without this the very first recorded interaction fails
+    # with "no such element" against a page that was never loaded. Only
+    # needed once: recording more steps onto a test case that already has
+    # some means it already has its own starting navigation.
+    needs_open_url_step = next_order == 1
 
     try:
         # headless=False is the entire point here — the user needs a window
         # they can actually click and type into.
         with SeleniumSession(browser=session.environment.browser, headless=False) as driver:
             driver.get(session.environment.base_url)
+
+            if needs_open_url_step:
+                TestStep.objects.create(
+                    test_case=session.test_case,
+                    order=next_order,
+                    action_type="open_url",
+                    params={"url": "{{BASE_URL}}"},
+                    note="Grabado automáticamente",
+                )
+                next_order += 1
+                session.steps_captured += 1
+                session.save(update_fields=["steps_captured"])
+
             while True:
                 try:
                     driver.execute_script(INJECT_JS)
