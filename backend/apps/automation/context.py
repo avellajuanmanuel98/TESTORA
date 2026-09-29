@@ -13,6 +13,11 @@ class ExecutionContext:
         self.environment = environment
         self.variables = {"BASE_URL": environment.base_url}
         self.variables.update({v.key: v.value for v in environment.variables.all()})
+        # The current step's own timeout_ms — the task runner sets this
+        # right before calling each executor, so _find() (executors.py) can
+        # wait for AJAX-populated elements (cascading dropdowns and the
+        # like) instead of failing the instant the element isn't there yet.
+        self.timeout_ms = 5000
 
     def resolve(self, text):
         if not isinstance(text, str):

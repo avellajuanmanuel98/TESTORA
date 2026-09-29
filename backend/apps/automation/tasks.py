@@ -111,6 +111,11 @@ def _run_test_case(result: TestResult, context: ExecutionContext) -> bool:
             try:
                 if executor is None:
                     raise ValueError(f"Acción no soportada por el motor: '{step.action_type}'.")
+                # See executors._find: waiting up to this step's own
+                # timeout_ms for its element to appear is what makes
+                # AJAX-populated fields (cascading dropdowns, etc.) work
+                # without a manual "Esperar" step before every one of them.
+                context.timeout_ms = step.timeout_ms
                 executor(driver, context, step.params)
                 step_result.status = TestResult.STATUS_PASSED
                 if step.action_type == "screenshot":

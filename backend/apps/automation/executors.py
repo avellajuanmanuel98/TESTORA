@@ -31,8 +31,20 @@ def _by(selector: str):
 
 
 def _find(driver, context, params):
+    """Waits up to the step's own timeout_ms for the element to appear,
+    instead of failing the instant it isn't in the DOM yet. This is what
+    makes a cascading dropdown (select a country, wait for the AJAX call
+    that repopulates the province select) work without a manual "Esperar"
+    step before every dependent field — real-world JSF/PrimeFaces forms hit
+    this constantly."""
     by, value = _by(context.resolve(params["selector"]))
-    return driver.find_element(by, value)
+    timeout = getattr(context, "timeout_ms", 5000) / 1000
+    try:
+        return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value)))
+    except TimeoutException:
+        raise NoSuchElementException(
+            f"No se encontró el elemento «{value}» después de esperar {int(timeout * 1000)}ms."
+        )
 
 
 def open_url(driver, context, params):
