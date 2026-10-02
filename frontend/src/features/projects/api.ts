@@ -33,10 +33,19 @@ interface UpdateProjectPayload {
 export function useUpdateProject(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    // The PATCH response only carries what ProjectWriteSerializer exposes
+    // (id/name/description/status) — no `members`. Replacing the cached
+    // ProjectDetail wholesale would wipe `members` out from under every
+    // page that reads it for role checks (canEdit/canDelete throughout the
+    // project), crashing on the next render. Merging into the existing
+    // cache keeps the instant-update feel without discarding fields this
+    // response never had.
     mutationFn: (payload: UpdateProjectPayload) =>
       api.patch<ProjectDetail>(`/projects/${projectId}/`, payload),
     onSuccess: (data) => {
-      queryClient.setQueryData(["projects", projectId], data);
+      queryClient.setQueryData<ProjectDetail>(["projects", projectId], (old) =>
+        old ? { ...old, ...data } : old
+      );
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });

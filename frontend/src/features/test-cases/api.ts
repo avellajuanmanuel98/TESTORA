@@ -65,9 +65,19 @@ interface UpdateTestCasePayload {
 export function useUpdateTestCase(testCaseId: string, projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    // The PATCH response only carries the fields TestCaseWriteSerializer
+    // exposes (id/project/name/description/tags/status) — no `steps`. The
+    // detail query's cached value has to keep its `steps` array, or the
+    // Builder's next render crashes on `testCase.steps.length`/`.map` over
+    // undefined (a blank-screen crash, not a visible error). Merging into
+    // the existing cache instead of replacing it wholesale keeps the
+    // instant-update feel (no refetch flicker) without discarding fields
+    // this response never had in the first place.
     mutationFn: (payload: UpdateTestCasePayload) => api.patch<TestCaseDetail>(`/test-cases/${testCaseId}/`, payload),
     onSuccess: (data) => {
-      queryClient.setQueryData(["test-cases", "detail", testCaseId], data);
+      queryClient.setQueryData<TestCaseDetail>(["test-cases", "detail", testCaseId], (old) =>
+        old ? { ...old, ...data } : old
+      );
       queryClient.invalidateQueries({ queryKey: ["test-cases", projectId] });
     },
   });
