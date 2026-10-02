@@ -1,6 +1,6 @@
 """JS injected into the recorded page by apps.automation.tasks.record_session.
 
-Re-run on every poll tick (idempotent via the window.__testoraRecording
+Re-run on every poll tick (idempotent via the window.__assuriaRecording
 guard) because a full page navigation — the normal result of clicking a
 link or submitting a form — wipes the page's JS state entirely, listeners
 included. Polling re-attaches them within one tick of the new page loading,
@@ -14,11 +14,11 @@ one with something more resilient.
 """
 
 INJECT_JS = r"""
-if (!window.__testoraRecording) {
-  window.__testoraRecording = true;
-  window.__testoraEvents = [];
+if (!window.__assuriaRecording) {
+  window.__assuriaRecording = true;
+  window.__assuriaEvents = [];
 
-  function testoraSelector(el) {
+  function assuriaSelector(el) {
     if (el.id) return '#' + CSS.escape(el.id);
     var path = [];
     var node = el;
@@ -41,7 +41,7 @@ if (!window.__testoraRecording) {
     return path.join(' > ');
   }
 
-  function testoraIsTextInput(el) {
+  function assuriaIsTextInput(el) {
     if (el.tagName === 'TEXTAREA') return true;
     if (el.tagName !== 'INPUT') return false;
     var textTypes = ['text', 'email', 'password', 'number', 'tel', 'url', 'search',
@@ -55,10 +55,10 @@ if (!window.__testoraRecording) {
     // meaningful action — the change event that follows is. Recording
     // both would produce a redundant "click" step ahead of every typed
     // value or picked option.
-    if (testoraIsTextInput(el) || el.tagName === 'SELECT') return;
-    window.__testoraEvents.push({
+    if (assuriaIsTextInput(el) || el.tagName === 'SELECT') return;
+    window.__assuriaEvents.push({
       type: 'click',
-      selector: testoraSelector(el),
+      selector: assuriaSelector(el),
       text: (el.innerText || el.value || '').trim().slice(0, 40),
     });
   }, true);
@@ -67,12 +67,12 @@ if (!window.__testoraRecording) {
     var el = e.target;
     if (el.tagName === 'SELECT') {
       var opt = el.options[el.selectedIndex];
-      window.__testoraEvents.push({ type: 'select', selector: testoraSelector(el), value: opt ? opt.text : '' });
-    } else if (testoraIsTextInput(el)) {
-      window.__testoraEvents.push({ type: 'input_text', selector: testoraSelector(el), value: el.value });
+      window.__assuriaEvents.push({ type: 'select', selector: assuriaSelector(el), value: opt ? opt.text : '' });
+    } else if (assuriaIsTextInput(el)) {
+      window.__assuriaEvents.push({ type: 'input_text', selector: assuriaSelector(el), value: el.value });
     }
   }, true);
 }
 """
 
-DRAIN_JS = "return (window.__testoraEvents || []).splice(0, (window.__testoraEvents || []).length);"
+DRAIN_JS = "return (window.__assuriaEvents || []).splice(0, (window.__assuriaEvents || []).length);"

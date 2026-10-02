@@ -31,7 +31,7 @@ export function DashboardPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-8">
       <h1 className="mb-1 text-[18px] font-semibold text-fg-primary">Panel</h1>
-      <p className="mb-6 text-[13px] text-fg-muted">Estado general de Testora Internal.</p>
+      <p className="mb-6 text-[13px] text-fg-muted">Estado general de Assuria Internal.</p>
 
       {loadingOverview ? (
         <Skeleton className="mb-6 h-24 w-full" />

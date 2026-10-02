@@ -5,8 +5,8 @@ from apps.core.models import TimestampedModel
 
 
 class Organization(TimestampedModel):
-    """The top-level data isolation boundary. Testora runs a single
-    organization ("Testora Internal") today; every Project hangs off one, so
+    """The top-level data isolation boundary. Assuria runs a single
+    organization ("Assuria Internal") today; every Project hangs off one, so
     supporting more organizations later is additive, not a rewrite. See the
     architecture notes on Organization isolation for the full rationale."""
 

@@ -9,11 +9,11 @@ from apps.test_suites.models import TestSuite, TestSuiteItem
 from apps.users.models import User
 
 DEMO_USERS = [
-    dict(email="admin@testora.dev", full_name="Camila Ibarra", org_role="owner", project_role="admin", password="Testora123!"),
-    dict(email="sofia.ramirez@testora.dev", full_name="Sofía Ramírez", org_role="member", project_role="qa_manager", password="Testora123!"),
-    dict(email="diego.torres@testora.dev", full_name="Diego Torres", org_role="member", project_role="qa_engineer", password="Testora123!"),
-    dict(email="valentina.cruz@testora.dev", full_name="Valentina Cruz", org_role="member", project_role="qa_engineer", password="Testora123!"),
-    dict(email="martin.lopez@testora.dev", full_name="Martín López", org_role="member", project_role="viewer", password="Testora123!"),
+    dict(email="admin@assuria.dev", full_name="Camila Ibarra", org_role="owner", project_role="admin", password="Assuria123!"),
+    dict(email="sofia.ramirez@assuria.dev", full_name="Sofía Ramírez", org_role="member", project_role="qa_manager", password="Assuria123!"),
+    dict(email="diego.torres@assuria.dev", full_name="Diego Torres", org_role="member", project_role="qa_engineer", password="Assuria123!"),
+    dict(email="valentina.cruz@assuria.dev", full_name="Valentina Cruz", org_role="member", project_role="qa_engineer", password="Assuria123!"),
+    dict(email="martin.lopez@assuria.dev", full_name="Martín López", org_role="member", project_role="viewer", password="Assuria123!"),
 ]
 
 # Modela el proyecto sobre las dos aplicaciones que Implementación tiene
@@ -154,12 +154,12 @@ SUITES = [
 
 
 class Command(BaseCommand):
-    help = "Seeds Testora Internal / Gencell Pharma demo data: users, environments, test cases and steps."
+    help = "Seeds Assuria Internal / Gencell Pharma demo data: users, environments, test cases and steps."
 
     @transaction.atomic
     def handle(self, *args, **options):
         organization, _ = Organization.objects.get_or_create(
-            slug="testora-internal", defaults={"name": "Testora Internal"}
+            slug="assuria-internal", defaults={"name": "Assuria Internal"}
         )
 
         users_by_email = {}
@@ -182,7 +182,7 @@ class Command(BaseCommand):
             )
         self.stdout.write(self.style.SUCCESS(f"Users ready: {len(users_by_email)}"))
 
-        admin_user = users_by_email["admin@testora.dev"]
+        admin_user = users_by_email["admin@assuria.dev"]
         description = (
             "Pruebas de las aplicaciones de Bioinformática y Referencias: recepción de "
             "muestras, pipeline de secuenciación (FASTQ/BAM/VCF), envío a interpretación "
@@ -259,5 +259,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Test suites ready: {suites_created}"))
 
         self.stdout.write(self.style.SUCCESS(
-            "\nDemo data seeded. Log in with admin@testora.dev / Testora123!"
+            "\nDemo data seeded. Log in with admin@assuria.dev / Assuria123!"
         ))

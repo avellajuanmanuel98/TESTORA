@@ -32,7 +32,7 @@ export function TopBar() {
           <div className="flex size-6 items-center justify-center rounded-md bg-fg-primary text-surface">
             <TerminalSquare className="size-3.5" aria-hidden />
           </div>
-          <span className="text-[14px] font-bold tracking-tight text-fg-primary">Testora</span>
+          <span className="text-[14px] font-bold tracking-tight text-fg-primary">Assuria</span>
         </NavLink>
         <nav className="flex h-full items-center gap-4 pl-4">
           {NAV_ITEMS.map((item) => (

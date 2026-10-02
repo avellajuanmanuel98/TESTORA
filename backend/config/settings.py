@@ -1,5 +1,5 @@
 """
-Django settings for the Testora backend.
+Django settings for the Assuria backend.
 
 Configuration is environment-driven (see .env.example) so the same codebase
 runs in local dev (docker compose) and later in other environments without
@@ -22,11 +22,11 @@ SECRET_KEY = env("SECRET_KEY", default="insecure-dev-key-change-me")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
-# The organization every user is attached to automatically until Testora
+# The organization every user is attached to automatically until Assuria
 # supports more than one (see apps/organizations). Kept in settings so the
 # seed command and the signal share a single source of truth.
-DEFAULT_ORGANIZATION_SLUG = env("DEFAULT_ORGANIZATION_SLUG", default="testora-internal")
-DEFAULT_ORGANIZATION_NAME = env("DEFAULT_ORGANIZATION_NAME", default="Testora Internal")
+DEFAULT_ORGANIZATION_SLUG = env("DEFAULT_ORGANIZATION_SLUG", default="assuria-internal")
+DEFAULT_ORGANIZATION_NAME = env("DEFAULT_ORGANIZATION_NAME", default="Assuria Internal")
 
 # Symmetric key used to encrypt EnvironmentVariable secret values at rest.
 # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
@@ -89,7 +89,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": env.db(
         "DATABASE_URL",
-        default="postgres://testora:testora@localhost:5432/testora",
+        default="postgres://assuria:assuria@localhost:5432/assuria",
     )
 }
 

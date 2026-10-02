@@ -29,7 +29,7 @@ interface StatusMarkProps {
 
 /** The square blip shared by StatusDot and StatusPill. Square, not a
  * circle — every other status dot in every dashboard is a circle; this is
- * Testora's own mark, echoing the squared-off logo. */
+ * Assuria's own mark, echoing the squared-off logo. */
 function StatusMark({ tone, live }: StatusMarkProps) {
   return (
     <span className="relative inline-flex size-[7px] shrink-0">

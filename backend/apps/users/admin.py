@@ -12,5 +12,5 @@ class UserAdmin(DjangoUserAdmin):
     # full_name (not Django's built-in first_name/last_name) is what the
     # app actually displays everywhere — it isn't in DjangoUserAdmin's
     # default fieldsets, so it was impossible to edit from this screen.
-    fieldsets = DjangoUserAdmin.fieldsets + (("Testora", {"fields": ("full_name",)}),)
-    add_fieldsets = DjangoUserAdmin.add_fieldsets + (("Testora", {"fields": ("full_name",)}),)
+    fieldsets = DjangoUserAdmin.fieldsets + (("Assuria", {"fields": ("full_name",)}),)
+    add_fieldsets = DjangoUserAdmin.add_fieldsets + (("Assuria", {"fields": ("full_name",)}),)

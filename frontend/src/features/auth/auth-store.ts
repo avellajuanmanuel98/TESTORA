@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthState>()(
       setAccessToken: (access) => set({ access }),
       clear: () => set({ access: null, refresh: null, user: null }),
     }),
-    { name: "testora-session" }
+    { name: "assuria-session" }
   )
 );
 

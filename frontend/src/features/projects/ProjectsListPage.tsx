@@ -88,7 +88,7 @@ export function ProjectsListPage() {
         <div>
           <h1 className="text-[18px] font-semibold text-fg-primary">Proyectos</h1>
           <p className="mt-0.5 text-[13px] text-fg-muted">
-            Espacios de trabajo de automatización de pruebas de Testora Internal.
+            Espacios de trabajo de automatización de pruebas de Assuria Internal.
           </p>
         </div>
         {canCreate && (

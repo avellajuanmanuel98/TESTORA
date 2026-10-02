@@ -1,7 +1,7 @@
 """Single source of truth for resolving "the current organization" for a
 request. Every place in the codebase that needs organization context calls
 into this module instead of querying OrganizationMembership directly, so the
-day Testora supports more than one organization per user, this is the only
+day Assuria supports more than one organization per user, this is the only
 place that changes.
 """
 

@@ -1,6 +1,6 @@
-# Testora
+# Assuria
 
-Plataforma interna de automatización de pruebas web basada en Selenium. Testora permite a un equipo de QA administrar proyectos, diseñar casos de prueba como automatizaciones (no como documentos), configurar entornos y variables, y ejecutarlas de forma asíncrona sobre Selenium real.
+Plataforma interna de automatización de pruebas web basada en Selenium. Assuria permite a un equipo de QA administrar proyectos, diseñar casos de prueba como automatizaciones (no como documentos), configurar entornos y variables, y ejecutarlas de forma asíncrona sobre Selenium real.
 
 Este repositorio contiene la **Fase 1** (arquitectura base, autenticación, Projects, Test Cases, el Test Case Builder, Environments y el Design System) y el primer corte de **Fase 2**: el motor de ejecución backend (modelos de Test Runs, Celery, worker con Selenium real). La UI de progreso en vivo de los runs llega en el próximo corte.
 
@@ -35,7 +35,7 @@ Selenium nunca se ejecuta dentro de un request HTTP: `POST /api/test-runs/` solo
 El dominio está preparado para múltiples organizaciones sin haber construido un SaaS multi-tenant completo (sin billing, planes ni onboarding comercial):
 
 ```
-Organization ("Testora Internal", única por ahora)
+Organization ("Assuria Internal", única por ahora)
   └─ OrganizationMembership (rol: owner / admin / member)
   └─ Project
         └─ ProjectMembership (rol: admin / qa_manager / qa_engineer / viewer)
@@ -51,7 +51,7 @@ El aislamiento se aplica **en el backend**, nunca solo ocultando datos en el fro
 ## Estructura del repositorio
 
 ```
-testora/
+assuria/
 ├── backend/
 │   ├── config/                  # settings, urls
 │   └── apps/
@@ -120,15 +120,15 @@ npm run dev
 
 ## Datos de demo
 
-`seed_demo_data` crea la organización **Testora Internal**, el proyecto **Gencell Pharma** (Bioinformática y Referencias: recepción de muestras, pipeline de secuenciación FASTQ/BAM/VCF, interpretación y entrega de resultados), tres entornos (DEV/QA/UAT) con variables, y ocho casos de prueba realistas con sus steps. Usuarios de ejemplo (contraseña `Testora123!` para todos):
+`seed_demo_data` crea la organización **Assuria Internal**, el proyecto **Gencell Pharma** (Bioinformática y Referencias: recepción de muestras, pipeline de secuenciación FASTQ/BAM/VCF, interpretación y entrega de resultados), tres entornos (DEV/QA/UAT) con variables, y ocho casos de prueba realistas con sus steps. Usuarios de ejemplo (contraseña `Assuria123!` para todos):
 
 | Email                          | Rol de organización | Rol en Gencell Pharma |
 |---------------------------------|----------------------|------------------|
-| admin@testora.dev               | owner                | admin            |
-| sofia.ramirez@testora.dev       | member               | qa_manager       |
-| diego.torres@testora.dev        | member               | qa_engineer      |
-| valentina.cruz@testora.dev      | member               | qa_engineer      |
-| martin.lopez@testora.dev        | member               | viewer           |
+| admin@assuria.dev               | owner                | admin            |
+| sofia.ramirez@assuria.dev       | member               | qa_manager       |
+| diego.torres@assuria.dev        | member               | qa_engineer      |
+| valentina.cruz@assuria.dev      | member               | qa_engineer      |
+| martin.lopez@assuria.dev        | member               | viewer           |
 
 ## API
 

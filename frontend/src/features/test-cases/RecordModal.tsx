@@ -40,7 +40,7 @@ export function RecordModal({ open, onClose, projectId, testCaseId, onRecordingS
       open={open}
       onClose={onClose}
       title="Grabar pasos"
-      description="Se abre una ventana de Chrome real en el entorno elegido. Hacé clic, escribí y seleccioná como lo haría un usuario — Testora va agregando cada acción como un paso. Cerrá la ventana del navegador cuando termines. Revisá los pasos grabados al final: una acción que dispara una navegación inmediata (como enviar un formulario) a veces no llega a capturarse."
+      description="Se abre una ventana de Chrome real en el entorno elegido. Hacé clic, escribí y seleccioná como lo haría un usuario — Assuria va agregando cada acción como un paso. Cerrá la ventana del navegador cuando termines. Revisá los pasos grabados al final: una acción que dispara una navegación inmediata (como enviar un formulario) a veces no llega a capturarse."
       footer={
         <>
           <Button type="button" variant="secondary" onClick={onClose}>

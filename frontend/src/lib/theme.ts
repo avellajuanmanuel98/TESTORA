@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "testora-theme";
+const STORAGE_KEY = "assuria-theme";
 
 function readTheme(): Theme {
   if (typeof document === "undefined") return "light";

@@ -42,7 +42,7 @@ export function LoginPage() {
           <div className="flex size-9 items-center justify-center rounded-lg bg-fg-primary text-surface">
             <TerminalSquare className="size-5" aria-hidden />
           </div>
-          <p className="text-[15px] font-semibold text-fg-primary">Testora</p>
+          <p className="text-[15px] font-semibold text-fg-primary">Assuria</p>
         </div>
 
         <form
@@ -51,7 +51,7 @@ export function LoginPage() {
         >
           <div>
             <h1 className="text-[15px] font-semibold text-fg-primary">Iniciar sesión</h1>
-            <p className="mt-0.5 text-[13px] text-fg-muted">Accede con tu cuenta de Testora Internal.</p>
+            <p className="mt-0.5 text-[13px] text-fg-muted">Accede con tu cuenta de Assuria Internal.</p>
           </div>
 
           <Input
@@ -62,7 +62,7 @@ export function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="nombre@testora.dev"
+            placeholder="nombre@assuria.dev"
           />
           <Input
             label="Contraseña"
