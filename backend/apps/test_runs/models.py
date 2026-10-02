@@ -1,11 +1,22 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import TimestampedModel
 from apps.environments.models import Environment
 from apps.projects.models import Project
 from apps.test_cases.models import TestCase, TestStep
 from apps.test_suites.models import TestSuite
+
+# How long a run can sit "queued"/"running" before we stop trusting it. The
+# task's own Celery time_limit (360s) already guarantees a run can't be
+# genuinely "running" longer than that from a worker that's still alive —
+# well past it means the worker itself died (its process killed, e.g. its
+# terminal window closed) before its own except-block ever got a chance to
+# run, the one case execute_test_run's own crash handling can't cover.
+STALE_RUN_THRESHOLD = timedelta(minutes=10)
 
 
 class TestRun(TimestampedModel):
@@ -47,6 +58,29 @@ class TestRun(TimestampedModel):
 
     def __str__(self) -> str:
         return f"Run #{self.pk} — {self.project.name} ({self.status})"
+
+
+def reclaim_stale_runs(queryset):
+    """Marks any run in `queryset` stuck "queued"/"running" past
+    STALE_RUN_THRESHOLD as errored.
+
+    Called wherever runs get listed to users (TestRunViewSet, the
+    dashboard's org overview) rather than from a scheduled job — there's no
+    Celery Beat in this project, and a check that only runs when someone's
+    actually looking is enough for an internal ~10-person tool where a
+    stale run is a display annoyance, not something anyone's blocked on.
+
+    Not a clean stop: if the original Celery message is still sitting
+    unconsumed in the broker and a worker eventually starts, it can still
+    process it from here, overwriting this row's status again. The real
+    fix for that would be revoking the task outright, which (like
+    RecordingSession's own cancel-recording) isn't reliably doable on
+    Windows' solo worker pool — accepted as the same trade-off made there.
+    """
+    cutoff = timezone.now() - STALE_RUN_THRESHOLD
+    queryset.filter(
+        status__in=[TestRun.STATUS_QUEUED, TestRun.STATUS_RUNNING], created_at__lt=cutoff
+    ).update(status=TestRun.STATUS_ERROR, finished_at=timezone.now())
 
 
 class TestResult(TimestampedModel):

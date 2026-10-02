@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from apps.core.viewsets import OrganizationScopedModelViewSet
-from apps.test_runs.models import TestResult, TestRun
+from apps.test_runs.models import TestResult, TestRun, reclaim_stale_runs
 from apps.test_runs.serializers import (
     TestRunCreateSerializer,
     TestRunDetailSerializer,
@@ -26,6 +26,7 @@ class TestRunViewSet(OrganizationScopedModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
+        reclaim_stale_runs(qs)
         if self.action == "retrieve":
             qs = qs.prefetch_related("test_results__test_case", "test_results__step_results__evidence")
         return qs

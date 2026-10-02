@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from apps.core.permissions import IsOrganizationMember
 from apps.projects.models import Project, ProjectMembership
-from apps.test_runs.models import TestResult, TestRun
+from apps.test_runs.models import TestResult, TestRun, reclaim_stale_runs
 
 FINISHED_STATUSES = [TestResult.STATUS_PASSED, TestResult.STATUS_FAILED, TestResult.STATUS_ERROR]
 ACTIVE_RUN_STATUSES = [TestRun.STATUS_QUEUED, TestRun.STATUS_RUNNING]
@@ -125,6 +125,7 @@ class OrgOverviewView(APIView):
         projects = Project.objects.filter(
             organization=request.organization, memberships__user=request.user
         )
+        reclaim_stale_runs(TestRun.objects.filter(project__in=projects))
 
         results = TestResult.objects.filter(run__project__in=projects, status__in=FINISHED_STATUSES)
         total = results.count()
