@@ -12,17 +12,16 @@
 
   body {
     @apply bg-surface text-fg-primary font-sans antialiased;
-    font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
   }
 
   /* Slightly tighter tracking at heading sizes reads as considered rather
-     than default-browser — Inter's own metrics are a touch loose above
+     than default-browser — Plus Jakarta Sans runs a touch loose above
      13px. Component-level tracking utilities (e.g. StatusPill's
      tracking-wider uppercase labels) still win, since utilities load
      after base. */
   h1, h2 {
-    letter-spacing: -0.012em;
+    letter-spacing: -0.014em;
   }
 
   ::selection {
