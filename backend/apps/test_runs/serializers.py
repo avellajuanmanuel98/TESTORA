@@ -8,10 +8,21 @@ from apps.test_suites.models import TestSuite
 
 
 class EvidenceSerializer(serializers.ModelSerializer):
+    # A relative URL on purpose: an absolute one would be built from the
+    # request's Host header, which is whatever the frontend's dev-server
+    # proxy (or a future reverse proxy) rewrote it to — e.g. "backend:8000"
+    # inside Docker Compose, unreachable from the browser. "/media/..." is
+    # resolved by the browser against its own origin instead, so it works
+    # the same way "/api/..." already does regardless of how it got proxied.
+    file = serializers.SerializerMethodField()
+
     class Meta:
         model = Evidence
         fields = ["id", "type", "file", "created_at"]
         read_only_fields = fields
+
+    def get_file(self, obj):
+        return obj.file.url if obj.file else None
 
 
 class StepResultSerializer(serializers.ModelSerializer):

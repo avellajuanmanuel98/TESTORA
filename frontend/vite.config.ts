@@ -18,6 +18,12 @@ export default defineConfig({
         target: process.env.VITE_API_PROXY_TARGET ?? "http://localhost:8000",
         changeOrigin: true,
       },
+      // Evidence files (screenshots/HTML) are served by Django itself under
+      // MEDIA_URL — same backend, needs the same proxy as /api.
+      "/media": {
+        target: process.env.VITE_API_PROXY_TARGET ?? "http://localhost:8000",
+        changeOrigin: true,
+      },
     },
   },
 });
