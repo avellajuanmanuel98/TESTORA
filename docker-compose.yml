@@ -62,6 +62,11 @@ services:
     shm_size: 2gb
     ports:
       - "${SELENIUM_PORT:-4444}:4444"
+      # noVNC: a web-based viewer into the container's own display, so a
+      # recording session (headless=False) can actually be watched/driven
+      # from the host — the container's browser window is otherwise
+      # invisible outside it. Password is the image's default, "secret".
+      - "${SELENIUM_NOVNC_PORT:-7900}:7900"
 
   frontend:
     build: ./frontend
