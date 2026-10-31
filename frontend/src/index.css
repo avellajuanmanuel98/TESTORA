@@ -16,6 +16,15 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Slightly tighter tracking at heading sizes reads as considered rather
+     than default-browser — Inter's own metrics are a touch loose above
+     13px. Component-level tracking utilities (e.g. StatusPill's
+     tracking-wider uppercase labels) still win, since utilities load
+     after base. */
+  h1, h2 {
+    letter-spacing: -0.012em;
+  }
+
   ::selection {
     background: var(--accent-subtle);
     color: var(--fg-primary);

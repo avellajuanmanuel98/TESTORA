@@ -15,7 +15,9 @@ function formatDuration(ms: number | null): string {
 function StatBlock({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex flex-col gap-1 border-r border-border-default px-6 py-4 last:border-r-0">
-      <span className="text-[22px] font-semibold leading-none text-fg-primary">{value}</span>
+      <span className="text-[22px] font-semibold leading-none tracking-tight tabular-nums text-fg-primary">
+        {value}
+      </span>
       <span className="text-[12px] text-fg-muted">{label}</span>
     </div>
   );
